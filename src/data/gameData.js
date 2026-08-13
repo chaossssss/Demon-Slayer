@@ -1,0 +1,317 @@
+/** 职业配置：初始仅解锁剑士，其余靠通关进度解锁 */
+export const CLASSES = {
+  swordsman: {
+    id: 'swordsman',
+    name: '剑士',
+    title: '破晓斩',
+    desc: '均衡的近战职业，起步稳、伤害扎实。',
+    color: '#c45c26',
+    maxHp: 70,
+    energy: 3,
+    startGold: 50,
+    goldPerTurn: 12,
+    unlock: { type: 'default' },
+    starterDeck: [
+      { cardId: 'slash', count: 4 },
+      { cardId: 'guard', count: 3 },
+      { cardId: 'focus_strike', count: 1 },
+    ],
+  },
+  mage: {
+    id: 'mage',
+    name: '咒术师',
+    title: '炎符',
+    desc: '高费高伤，擅长范围咒术与灼烧。',
+    color: '#3d6b8c',
+    maxHp: 55,
+    energy: 3,
+    startGold: 55,
+    goldPerTurn: 14,
+    unlock: { type: 'floors', value: 5 },
+    starterDeck: [
+      { cardId: 'ember', count: 4 },
+      { cardId: 'ward', count: 2 },
+      { cardId: 'inferno', count: 1 },
+      { cardId: 'guard', count: 1 },
+    ],
+  },
+  assassin: {
+    id: 'assassin',
+    name: '影刃',
+    title: '夜狩',
+    desc: '脆皮爆发，击杀回能，速战速决。',
+    color: '#5a3d6b',
+    maxHp: 48,
+    energy: 4,
+    startGold: 60,
+    goldPerTurn: 13,
+    unlock: { type: 'wins', value: 2 },
+    starterDeck: [
+      { cardId: 'stab', count: 4 },
+      { cardId: 'smoke', count: 2 },
+      { cardId: 'execute', count: 1 },
+      { cardId: 'guard', count: 1 },
+    ],
+  },
+  guardian: {
+    id: 'guardian',
+    name: '御盾',
+    title: '铁壁',
+    desc: '厚血高防，以守待攻，反伤见长。',
+    color: '#4a6b3d',
+    maxHp: 90,
+    energy: 3,
+    startGold: 45,
+    goldPerTurn: 11,
+    unlock: { type: 'wins', value: 4 },
+    starterDeck: [
+      { cardId: 'bash', count: 3 },
+      { cardId: 'iron_wall', count: 3 },
+      { cardId: 'riposte', count: 1 },
+      { cardId: 'slash', count: 1 },
+    ],
+  },
+}
+
+/** 卡牌模板。星级在实例上叠加倍率 */
+export const CARD_POOL = {
+  slash: {
+    id: 'slash',
+    name: '斩击',
+    type: 'attack',
+    cost: 1,
+    rarity: 'common',
+    price: 18,
+    classes: ['swordsman', 'guardian'],
+    base: { damage: 8 },
+    desc: (s) => `造成 ${s.damage} 点伤害`,
+  },
+  focus_strike: {
+    id: 'focus_strike',
+    name: '一心斩',
+    type: 'attack',
+    cost: 2,
+    rarity: 'uncommon',
+    price: 32,
+    classes: ['swordsman'],
+    base: { damage: 16 },
+    desc: (s) => `造成 ${s.damage} 点伤害`,
+  },
+  whirlwind: {
+    id: 'whirlwind',
+    name: '回旋刀',
+    type: 'attack',
+    cost: 1,
+    rarity: 'uncommon',
+    price: 28,
+    classes: ['swordsman'],
+    base: { damage: 5, hits: 2 },
+    desc: (s) => `造成 ${s.damage} 点伤害 ${s.hits} 次`,
+  },
+  guard: {
+    id: 'guard',
+    name: '格挡',
+    type: 'skill',
+    cost: 1,
+    rarity: 'common',
+    price: 16,
+    classes: ['swordsman', 'mage', 'assassin', 'guardian'],
+    base: { block: 6 },
+    desc: (s) => `获得 ${s.block} 点护甲`,
+  },
+  ember: {
+    id: 'ember',
+    name: '炎咒',
+    type: 'attack',
+    cost: 1,
+    rarity: 'common',
+    price: 18,
+    classes: ['mage'],
+    base: { damage: 7, burn: 2 },
+    desc: (s) => `造成 ${s.damage} 点伤害，施加 ${s.burn} 灼烧`,
+  },
+  inferno: {
+    id: 'inferno',
+    name: '业火',
+    type: 'attack',
+    cost: 2,
+    rarity: 'rare',
+    price: 40,
+    classes: ['mage'],
+    base: { damage: 12, burn: 4 },
+    desc: (s) => `造成 ${s.damage} 点伤害，施加 ${s.burn} 灼烧`,
+  },
+  ward: {
+    id: 'ward',
+    name: '结界',
+    type: 'skill',
+    cost: 1,
+    rarity: 'common',
+    price: 17,
+    classes: ['mage'],
+    base: { block: 5, heal: 2 },
+    desc: (s) => `获得 ${s.block} 护甲，回复 ${s.heal} 生命`,
+  },
+  mana_surge: {
+    id: 'mana_surge',
+    name: '灵涌',
+    type: 'skill',
+    cost: 0,
+    rarity: 'uncommon',
+    price: 30,
+    classes: ['mage'],
+    base: { energy: 2 },
+    desc: (s) => `获得 ${s.energy} 点能量`,
+  },
+  stab: {
+    id: 'stab',
+    name: '刺击',
+    type: 'attack',
+    cost: 1,
+    rarity: 'common',
+    price: 17,
+    classes: ['assassin'],
+    base: { damage: 9 },
+    desc: (s) => `造成 ${s.damage} 点伤害`,
+  },
+  execute: {
+    id: 'execute',
+    name: '处决',
+    type: 'attack',
+    cost: 2,
+    rarity: 'rare',
+    price: 42,
+    classes: ['assassin'],
+    base: { damage: 14, executeBonus: 10 },
+    desc: (s) => `造成 ${s.damage} 点伤害；目标低于半血时额外 ${s.executeBonus}`,
+  },
+  smoke: {
+    id: 'smoke',
+    name: '烟遁',
+    type: 'skill',
+    cost: 1,
+    rarity: 'common',
+    price: 18,
+    classes: ['assassin'],
+    base: { block: 4, draw: 1 },
+    desc: (s) => `获得 ${s.block} 护甲，抽 ${s.draw} 张牌`,
+  },
+  backstab: {
+    id: 'backstab',
+    name: '背刺',
+    type: 'attack',
+    cost: 0,
+    rarity: 'uncommon',
+    price: 34,
+    classes: ['assassin'],
+    base: { damage: 11 },
+    desc: (s) => `造成 ${s.damage} 点伤害`,
+  },
+  bash: {
+    id: 'bash',
+    name: '重击',
+    type: 'attack',
+    cost: 1,
+    rarity: 'common',
+    price: 18,
+    classes: ['guardian'],
+    base: { damage: 6, block: 3 },
+    desc: (s) => `造成 ${s.damage} 点伤害，获得 ${s.block} 护甲`,
+  },
+  iron_wall: {
+    id: 'iron_wall',
+    name: '铁壁',
+    type: 'skill',
+    cost: 1,
+    rarity: 'common',
+    price: 18,
+    classes: ['guardian'],
+    base: { block: 10 },
+    desc: (s) => `获得 ${s.block} 点护甲`,
+  },
+  riposte: {
+    id: 'riposte',
+    name: '反击',
+    type: 'skill',
+    cost: 1,
+    rarity: 'uncommon',
+    price: 30,
+    classes: ['guardian'],
+    base: { block: 7, thorns: 4 },
+    desc: (s) => `获得 ${s.block} 护甲与 ${s.thorns} 反伤`,
+  },
+  fortify: {
+    id: 'fortify',
+    name: '固守',
+    type: 'skill',
+    cost: 2,
+    rarity: 'rare',
+    price: 38,
+    classes: ['guardian'],
+    base: { block: 18 },
+    desc: (s) => `获得 ${s.block} 点护甲`,
+  },
+  heal_potion: {
+    id: 'heal_potion',
+    name: '疗伤散',
+    type: 'skill',
+    cost: 1,
+    rarity: 'uncommon',
+    price: 26,
+    classes: ['swordsman', 'mage', 'assassin', 'guardian'],
+    base: { heal: 8 },
+    desc: (s) => `回复 ${s.heal} 点生命`,
+  },
+  heavy_slash: {
+    id: 'heavy_slash',
+    name: '裂空',
+    type: 'attack',
+    cost: 2,
+    rarity: 'rare',
+    price: 44,
+    classes: ['swordsman', 'guardian'],
+    base: { damage: 22 },
+    desc: (s) => `造成 ${s.damage} 点伤害`,
+  },
+}
+
+export const STAR_MULT = {
+  1: 1,
+  2: 1.75,
+  3: 2.75,
+}
+
+export const RARITY_WEIGHT = {
+  common: 60,
+  uncommon: 30,
+  rare: 10,
+}
+
+export const ENEMY_TEMPLATES = [
+  { id: 'imp', name: '小鬼', hp: 28, damage: 6, intent: 'attack' },
+  { id: 'hound', name: '血犬', hp: 34, damage: 8, intent: 'attack' },
+  { id: 'brute', name: '蛮鬼', hp: 48, damage: 10, intent: 'attack', blockChance: 0.3 },
+  { id: 'shaman', name: '咒鬼', hp: 36, damage: 7, intent: 'burn', burn: 3 },
+  { id: 'elite', name: '鬼将', hp: 70, damage: 14, intent: 'attack', elite: true },
+  { id: 'boss', name: '百目鬼王', hp: 120, damage: 16, intent: 'boss', elite: true, boss: true },
+]
+
+export const MAX_STAR = 3
+export const MERGE_COUNT = 3
+export const HAND_SIZE = 5
+export const SHOP_SIZE = 3
+export const FLOORS_TO_WIN = 10
+
+export function scaleStats(base, star) {
+  const m = STAR_MULT[star] || 1
+  const out = {}
+  for (const [k, v] of Object.entries(base)) {
+    out[k] = Math.round(v * m)
+  }
+  return out
+}
+
+export function getCardDesc(template, star) {
+  const stats = scaleStats(template.base, star)
+  return template.desc(stats)
+}
