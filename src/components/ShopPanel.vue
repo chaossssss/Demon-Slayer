@@ -1,8 +1,13 @@
 <template>
-  <aside class="shop panel">
+  <aside class="shop panel" :class="{ 'is-locked': shopLocked }">
     <header>
-      <h2>卡牌市集</h2>
-      <p>每回合自动刷新 · 三张同名同星可合成升星（最高 ★★★）</p>
+      <div class="title-row">
+        <h2>卡牌市集</h2>
+        <span v-if="shopLocked" class="lock-badge">已锁定</span>
+      </div>
+      <p>
+        {{ shopLocked ? '货架已锁定，结束回合不会刷新' : '每回合自动刷新 · 可锁定保留心仪卡牌' }}
+      </p>
     </header>
 
     <div class="offers">
@@ -11,17 +16,31 @@
         :key="offer.offerId"
         :card="offer"
         :price="offer.price"
-        :disabled="gold < offer.price || locked"
+        :disabled="gold < offer.price || disabled"
         @select="$emit('buy', offer.offerId)"
       />
       <p v-if="!shop.length" class="empty">本回合货架已空</p>
     </div>
 
     <div class="actions">
-      <button class="btn btn-ghost dark" :disabled="locked || gold < rerollCost" @click="$emit('reroll')">
+      <button
+        class="btn btn-ghost dark"
+        :class="{ active: shopLocked }"
+        :disabled="disabled"
+        type="button"
+        @click="$emit('toggle-lock')"
+      >
+        {{ shopLocked ? '解锁市集' : '锁定市集' }}
+      </button>
+      <button
+        class="btn btn-ghost dark"
+        :disabled="disabled || shopLocked || gold < rerollCost"
+        type="button"
+        @click="$emit('reroll')"
+      >
         刷新（{{ rerollCost }}金）
       </button>
-      <button class="btn btn-ghost dark" @click="$emit('merge')">合成一览</button>
+      <button class="btn btn-ghost dark" type="button" @click="$emit('merge')">合成一览</button>
     </div>
   </aside>
 </template>
@@ -33,10 +52,11 @@ defineProps({
   shop: { type: Array, default: () => [] },
   gold: Number,
   rerollCost: Number,
-  locked: Boolean,
+  disabled: Boolean,
+  shopLocked: Boolean,
 })
 
-defineEmits(['buy', 'reroll', 'merge'])
+defineEmits(['buy', 'reroll', 'merge', 'toggle-lock'])
 </script>
 
 <style scoped>
@@ -46,6 +66,17 @@ defineEmits(['buy', 'reroll', 'merge'])
   flex-direction: column;
   gap: 14px;
   min-height: 320px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.shop.is-locked {
+  box-shadow: inset 0 0 0 2px rgba(155, 45, 31, 0.35);
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 header h2 {
@@ -53,6 +84,14 @@ header h2 {
   font-family: var(--font-display);
   letter-spacing: 0.12em;
   font-size: 1.25rem;
+}
+
+.lock-badge {
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--paper);
+  background: var(--blood);
 }
 
 header p {
@@ -86,8 +125,14 @@ header p {
   background: rgba(28, 23, 18, 0.06);
 }
 
-.btn-ghost.dark:hover {
+.btn-ghost.dark:hover:not(:disabled) {
   background: rgba(28, 23, 18, 0.12);
   border-color: var(--ink);
+}
+
+.btn-ghost.dark.active {
+  color: var(--paper);
+  background: var(--blood);
+  border-color: #5c180f;
 }
 </style>

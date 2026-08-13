@@ -26,7 +26,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { CARD_POOL, getCardDesc, MAX_STAR } from '@/data/gameData'
+import { CARD_POOL, getCardDesc, MAX_STAR, scaleStats } from '@/data/gameData'
 
 const props = defineProps({
   card: { type: Object, required: true },
@@ -37,13 +37,23 @@ const props = defineProps({
 
 defineEmits(['select'])
 
-const star = computed(() => props.card.star || 1)
+const star = computed(() => {
+  // 市集货架强制按一星展示，防止异常字段把三星样式带进商店
+  if (props.card.fromShop || props.price != null) return 1
+  return Math.min(Math.max(1, Number(props.card.star) || 1), MAX_STAR)
+})
 const tpl = computed(() => CARD_POOL[props.card.cardId])
-const isUltimate = computed(() => star.value >= MAX_STAR && !!tpl.value?.ultimate)
+const isUltimate = computed(() => {
+  if (props.card.fromShop || props.price != null) return false
+  return star.value >= MAX_STAR && !!tpl.value?.ultimate
+})
 const ultimateName = computed(() => tpl.value?.ultimate?.name || '')
 
 const description = computed(() => {
   if (!tpl.value) return ''
+  if (props.card.fromShop || props.price != null) {
+    return tpl.value.desc(scaleStats(tpl.value.base, 1))
+  }
   return getCardDesc(tpl.value, star.value)
 })
 

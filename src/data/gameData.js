@@ -10,11 +10,11 @@ export const CLASSES = {
     energy: 3,
     startGold: 50,
     goldPerTurn: 12,
-    unlock: { type: 'default' },
+    unlock: { type: 'default' }, // TODO: 测试完改回 floors/wins 解锁
     starterDeck: [
-      { cardId: 'slash', count: 4 },
-      { cardId: 'guard', count: 3 },
-      { cardId: 'focus_strike', count: 1 },
+      { cardId: 'slash', count: 2 },
+      { cardId: 'heal_potion', count: 1 },
+      { cardId: 'guard', count: 2 },
     ],
   },
   mage: {
@@ -27,12 +27,11 @@ export const CLASSES = {
     energy: 3,
     startGold: 55,
     goldPerTurn: 14,
-    unlock: { type: 'floors', value: 5 },
+    unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'floors', value: 5 }
     starterDeck: [
-      { cardId: 'ember', count: 4 },
-      { cardId: 'ward', count: 2 },
-      { cardId: 'inferno', count: 1 },
-      { cardId: 'guard', count: 1 },
+      { cardId: 'slash', count: 2 },
+      { cardId: 'heal_potion', count: 1 },
+      { cardId: 'guard', count: 2 },
     ],
   },
   assassin: {
@@ -45,12 +44,11 @@ export const CLASSES = {
     energy: 4,
     startGold: 60,
     goldPerTurn: 13,
-    unlock: { type: 'wins', value: 2 },
+    unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'wins', value: 2 }
     starterDeck: [
-      { cardId: 'stab', count: 4 },
-      { cardId: 'smoke', count: 2 },
-      { cardId: 'execute', count: 1 },
-      { cardId: 'guard', count: 1 },
+      { cardId: 'slash', count: 2 },
+      { cardId: 'heal_potion', count: 1 },
+      { cardId: 'guard', count: 2 },
     ],
   },
   guardian: {
@@ -63,12 +61,11 @@ export const CLASSES = {
     energy: 3,
     startGold: 45,
     goldPerTurn: 11,
-    unlock: { type: 'wins', value: 4 },
+    unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'wins', value: 4 }
     starterDeck: [
-      { cardId: 'bash', count: 3 },
-      { cardId: 'iron_wall', count: 3 },
-      { cardId: 'riposte', count: 1 },
-      { cardId: 'slash', count: 1 },
+      { cardId: 'slash', count: 2 },
+      { cardId: 'heal_potion', count: 1 },
+      { cardId: 'guard', count: 2 },
     ],
   },
 }

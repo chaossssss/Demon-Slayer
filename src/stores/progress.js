@@ -6,12 +6,17 @@ const STORAGE_KEY = 'demonslayer_progress'
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const data = JSON.parse(raw)
+      // 测试期：强制全职业可用
+      data.unlocked = Object.keys(CLASSES)
+      return data
+    }
   } catch {
     /* ignore */
   }
   return {
-    unlocked: ['swordsman'],
+    unlocked: Object.keys(CLASSES),
     wins: 0,
     bestFloor: 0,
     totalRuns: 0,
@@ -49,15 +54,8 @@ export const useProgressStore = defineStore('progress', {
       this.persist()
     },
     checkUnlocks() {
-      const next = new Set(this.unlocked)
-      for (const c of Object.values(CLASSES)) {
-        if (next.has(c.id)) continue
-        const u = c.unlock
-        if (u.type === 'default') next.add(c.id)
-        if (u.type === 'floors' && this.bestFloor >= u.value) next.add(c.id)
-        if (u.type === 'wins' && this.wins >= u.value) next.add(c.id)
-      }
-      this.unlocked = [...next]
+      // 测试期：始终全解锁
+      this.unlocked = Object.keys(CLASSES)
     },
   },
 })

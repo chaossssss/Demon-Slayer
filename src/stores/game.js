@@ -9,13 +9,14 @@ import {
   MERGE_COUNT,
   RARITY_WEIGHT,
   SHOP_SIZE,
-  getCardDesc,
   scaleStats,
 } from '@/data/gameData'
 import { useProgressStore } from './progress'
 
 let uid = 1
+let shopSeq = 1
 const nextId = () => `c${uid++}`
+const nextShopId = () => `s${shopSeq++}`
 
 function shuffle(arr) {
   const a = [...arr]
@@ -29,15 +30,26 @@ function shuffle(arr) {
 function createCardInstance(cardId, star = 1) {
   const tpl = CARD_POOL[cardId]
   if (!tpl) throw new Error(`Unknown card ${cardId}`)
+  const safeStar = Math.min(Math.max(1, Number(star) || 1), MAX_STAR)
   return {
     uid: nextId(),
     cardId,
-    star,
+    star: safeStar,
     name: tpl.name,
     type: tpl.type,
     cost: tpl.cost,
     rarity: tpl.rarity,
   }
+}
+
+/** 卡组按 uid 去重，防止拷贝残留导致多出三星卡 */
+function dedupeByUid(cards) {
+  const seen = new Set()
+  return cards.filter((c) => {
+    if (!c?.uid || seen.has(c.uid)) return false
+    seen.add(c.uid)
+    return true
+  })
 }
 
 function pickWeighted(cards) {
@@ -97,6 +109,7 @@ export const useGameStore = defineStore('game', {
     hand: [],
     discard: [],
     shop: [],
+    shopLocked: false,
     enemy: null,
     log: [],
     selectedForMerge: [],
@@ -157,6 +170,7 @@ export const useGameStore = defineStore('game', {
       const cls = CLASSES[classId]
       if (!cls) return
       uid = 1
+      shopSeq = 1
       const deck = []
       for (const { cardId, count } of cls.starterDeck) {
         for (let i = 0; i < count; i++) deck.push(createCardInstance(cardId, 1))
@@ -179,6 +193,7 @@ export const useGameStore = defineStore('game', {
         hand: [],
         discard: [],
         shop: [],
+        shopLocked: false,
         enemy: null,
         log: [],
         selectedForMerge: [],
@@ -186,8 +201,7 @@ export const useGameStore = defineStore('game', {
         mergeToast: '',
       })
       this.pushLog(`以「${cls.name}」踏上斩鬼之路。`)
-      // 初始卡组若已有 3 张同名，开局即合成
-      this.mergeAllPossible()
+      // 开局使用职业固定初始卡组，不自动合成
       this.enterFloor()
     },
 
@@ -195,7 +209,9 @@ export const useGameStore = defineStore('game', {
       this.enemy = makeEnemy(this.floor)
       this.block = 0
       this.thorns = 0
-      this.drawPile = shuffle(this.deck.map((c) => ({ ...c })))
+      // 去重后，战斗牌堆与卡组共用同一对象引用，避免「同 uid 双份」导致三星卡异常再现
+      this.deck = dedupeByUid(this.deck)
+      this.drawPile = shuffle([...this.deck])
       this.hand = []
       this.discard = []
       this.phase = 'combat'
@@ -214,7 +230,11 @@ export const useGameStore = defineStore('game', {
       this.gold += income
       this.pushLog(`回合 ${this.turn}：获得 ${income} 金币。`)
 
-      this.refreshShop()
+      if (this.shopLocked) {
+        this.pushLog('市集已锁定，本回合保留货架。')
+      } else {
+        this.refreshShop()
+      }
       this.drawCards(HAND_SIZE)
       this.tickEnemyBurn()
       this.checkCombatEnd()
@@ -226,16 +246,18 @@ export const useGameStore = defineStore('game', {
       const offers = []
       for (let i = 0; i < SHOP_SIZE; i++) {
         const tpl = pickWeighted(pool)
+        const stats = scaleStats(tpl.base, 1)
         offers.push({
-          offerId: nextId(),
+          offerId: nextShopId(),
           cardId: tpl.id,
-          star: 1,
+          star: 1, // 市集只出售一星卡，绝不带入合成星级
           name: tpl.name,
           type: tpl.type,
           cost: tpl.cost,
           rarity: tpl.rarity,
           price: tpl.price + Math.floor(this.floor * 1.5),
-          desc: getCardDesc(tpl, 1),
+          desc: tpl.desc(stats),
+          fromShop: true,
         })
       }
       this.shop = offers
@@ -245,11 +267,12 @@ export const useGameStore = defineStore('game', {
       const offer = this.shop.find((o) => o.offerId === offerId)
       if (!offer || this.gold < offer.price) return false
       this.gold -= offer.price
+      // 购买始终生成一星实例，忽略货架上任何异常字段
       const card = createCardInstance(offer.cardId, 1)
       this.deck.push(card)
-      // 战斗中：购入牌进手牌，方便立刻看到；层间休整只进卡组
+      // 战斗中：同一引用进手牌（不要 {...card} 拷贝，否则会同 uid 双份）
       if (this.phase === 'combat') {
-        this.hand.push({ ...card })
+        this.hand.push(card)
       }
       this.shop = this.shop.filter((o) => o.offerId !== offerId)
       this.pushLog(`购入「${offer.name}」(-${offer.price}金)`)
@@ -258,12 +281,19 @@ export const useGameStore = defineStore('game', {
     },
 
     rerollShop() {
+      if (this.shopLocked) return false
       const cost = 8 + this.floor
       if (this.gold < cost) return false
       this.gold -= cost
       this.refreshShop()
       this.pushLog(`刷新商店 (-${cost}金)`)
       return true
+    },
+
+    toggleShopLock() {
+      if (this.phase === 'victory' || this.phase === 'defeat') return
+      this.shopLocked = !this.shopLocked
+      this.pushLog(this.shopLocked ? '市集已锁定，结束回合不再刷新。' : '市集已解锁，将按回合刷新。')
     },
 
     drawCards(n) {
@@ -416,7 +446,9 @@ export const useGameStore = defineStore('game', {
       this.hand = []
       this.drawPile = []
       this.discard = []
-      this.shop = []
+      if (!this.shopLocked) {
+        this.shop = []
+      }
       this.pushLog(`击败 ${this.enemy.name}！获得 ${reward} 金币。`)
 
       if (this.enemy.boss || this.floor >= FLOORS_TO_WIN) {
@@ -433,11 +465,16 @@ export const useGameStore = defineStore('game', {
         this.hp += heal
         this.pushLog(`休整，回复 ${heal} 生命。`)
       }
-      this.refreshShop()
+      if (this.shopLocked) {
+        this.pushLog('市集已锁定，保留当前货架。')
+      } else {
+        this.refreshShop()
+      }
     },
 
     nextFloor() {
       if (this.phase !== 'shop') return
+      this.deck = dedupeByUid(this.deck)
       this.floor += 1
       this.enterFloor()
     },
@@ -457,9 +494,9 @@ export const useGameStore = defineStore('game', {
 
       const upgraded = createCardInstance(cardId, star + 1)
       this.deck.push(upgraded)
-      // 战斗中把升星牌塞进手牌，玩家能立刻看到 ★★ / ★★★
+      // 战斗中同一引用进手牌，避免拷贝造成双份
       if (this.phase === 'combat') {
-        this.hand.push({ ...upgraded })
+        this.hand.push(upgraded)
       }
 
       const label = `${'★'.repeat(star + 1)}${upgraded.name}`

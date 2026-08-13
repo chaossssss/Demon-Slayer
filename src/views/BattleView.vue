@@ -45,10 +45,12 @@
         :shop="game.shop"
         :gold="game.gold"
         :reroll-cost="rerollCost"
-        :locked="game.phase === 'victory' || game.phase === 'defeat'"
+        :disabled="game.phase === 'victory' || game.phase === 'defeat'"
+        :shop-locked="game.shopLocked"
         @buy="game.buyCard"
         @reroll="game.rerollShop"
         @merge="game.toggleMergePanel(true)"
+        @toggle-lock="game.toggleShopLock"
       />
 
       <aside class="log panel">
