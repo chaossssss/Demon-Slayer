@@ -1,7 +1,11 @@
 <template>
   <button
     class="card"
-    :class="[`type-${card.type}`, `rarity-${card.rarity}`, { disabled, playable }]"
+    :class="[
+      `type-${card.type}`,
+      `rarity-${card.rarity}`,
+      { disabled, playable, ultimate: isUltimate },
+    ]"
     :disabled="disabled"
     @click="$emit('select', card)"
   >
@@ -9,7 +13,9 @@
       <span class="cost">{{ card.cost }}</span>
       <span class="stars">{{ '★'.repeat(card.star || 1) }}</span>
     </div>
+    <div v-if="isUltimate" class="ult-badge">大招</div>
     <h3 class="name">{{ card.name }}</h3>
+    <p v-if="isUltimate && ultimateName" class="ult-name">{{ ultimateName }}</p>
     <p class="desc">{{ card.desc || description }}</p>
     <div class="card-foot">
       <span class="type-label">{{ typeLabel }}</span>
@@ -20,7 +26,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { CARD_POOL, getCardDesc } from '@/data/gameData'
+import { CARD_POOL, getCardDesc, MAX_STAR } from '@/data/gameData'
 
 const props = defineProps({
   card: { type: Object, required: true },
@@ -31,17 +37,25 @@ const props = defineProps({
 
 defineEmits(['select'])
 
+const star = computed(() => props.card.star || 1)
+const tpl = computed(() => CARD_POOL[props.card.cardId])
+const isUltimate = computed(() => star.value >= MAX_STAR && !!tpl.value?.ultimate)
+const ultimateName = computed(() => tpl.value?.ultimate?.name || '')
+
 const description = computed(() => {
-  const tpl = CARD_POOL[props.card.cardId]
-  if (!tpl) return ''
-  return getCardDesc(tpl, props.card.star || 1)
+  if (!tpl.value) return ''
+  return getCardDesc(tpl.value, star.value)
 })
 
-const typeLabel = computed(() => (props.card.type === 'attack' ? '攻击' : '技能'))
+const typeLabel = computed(() => {
+  if (isUltimate.value) return '大招'
+  return props.card.type === 'attack' ? '攻击' : '技能'
+})
 </script>
 
 <style scoped>
 .card {
+  position: relative;
   width: 148px;
   min-height: 210px;
   padding: 12px;
@@ -86,6 +100,25 @@ const typeLabel = computed(() => (props.card.type === 'attack' ? '攻击' : '技
   border-color: rgba(201, 162, 39, 0.55);
 }
 
+.card.ultimate {
+  width: 158px;
+  min-height: 230px;
+  border-color: #c9a227;
+  background: linear-gradient(165deg, #5a3a14 0%, #2a1810 55%, #1a1210 100%);
+  box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.45), 0 14px 28px rgba(0, 0, 0, 0.45);
+}
+
+.ult-badge {
+  position: absolute;
+  top: 42px;
+  right: 8px;
+  padding: 2px 6px;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  background: var(--blood);
+  color: var(--paper);
+}
+
 .card-top {
   display: flex;
   justify-content: space-between;
@@ -112,18 +145,25 @@ const typeLabel = computed(() => (props.card.type === 'attack' ? '攻击' : '技
 }
 
 .name {
-  margin: 14px 0 8px;
+  margin: 14px 0 4px;
   font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: 0.06em;
 }
 
+.ult-name {
+  margin: 0 0 6px;
+  color: #e8c56a;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+}
+
 .desc {
   margin: 0;
   flex: 1;
-  font-size: 0.92rem;
-  line-height: 1.45;
+  font-size: 0.84rem;
+  line-height: 1.4;
   color: rgba(232, 213, 163, 0.88);
 }
 

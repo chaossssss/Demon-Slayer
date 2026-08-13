@@ -9,6 +9,7 @@ import {
   MERGE_COUNT,
   RARITY_WEIGHT,
   SHOP_SIZE,
+  getCardDesc,
   scaleStats,
 } from '@/data/gameData'
 import { useProgressStore } from './progress'
@@ -100,6 +101,7 @@ export const useGameStore = defineStore('game', {
     log: [],
     selectedForMerge: [],
     showMerge: false,
+    mergeToast: '',
   }),
 
   getters: {
@@ -121,24 +123,27 @@ export const useGameStore = defineStore('game', {
     canPlay() {
       return (card) => this.phase === 'combat' && this.energy >= card.cost && this.hp > 0
     },
-    mergeGroups(state) {
+    /** 全部同名同星进度（含未满 3 张），便于合成面板展示 */
+    mergeProgress(state) {
       const map = new Map()
       for (const c of state.deck) {
         if (c.star >= MAX_STAR) continue
         const key = `${c.cardId}_${c.star}`
-        if (!map.has(key)) map.set(key, [])
-        map.get(key).push(c)
+        if (!map.has(key)) {
+          map.set(key, {
+            key,
+            cardId: c.cardId,
+            star: c.star,
+            count: 0,
+            name: c.name,
+          })
+        }
+        map.get(key).count += 1
       }
-      return [...map.entries()]
-        .filter(([, list]) => list.length >= MERGE_COUNT)
-        .map(([key, list]) => ({
-          key,
-          cardId: list[0].cardId,
-          star: list[0].star,
-          count: list.length,
-          name: list[0].name,
-          cards: list,
-        }))
+      return [...map.values()].sort((a, b) => b.count - a.count || b.star - a.star)
+    },
+    mergeGroups() {
+      return this.mergeProgress.filter((g) => g.count >= MERGE_COUNT)
     },
   },
 
@@ -178,8 +183,11 @@ export const useGameStore = defineStore('game', {
         log: [],
         selectedForMerge: [],
         showMerge: false,
+        mergeToast: '',
       })
       this.pushLog(`以「${cls.name}」踏上斩鬼之路。`)
+      // 初始卡组若已有 3 张同名，开局即合成
+      this.mergeAllPossible()
       this.enterFloor()
     },
 
@@ -227,7 +235,7 @@ export const useGameStore = defineStore('game', {
           cost: tpl.cost,
           rarity: tpl.rarity,
           price: tpl.price + Math.floor(this.floor * 1.5),
-          desc: tpl.desc(scaleStats(tpl.base, 1)),
+          desc: getCardDesc(tpl, 1),
         })
       }
       this.shop = offers
@@ -239,10 +247,13 @@ export const useGameStore = defineStore('game', {
       this.gold -= offer.price
       const card = createCardInstance(offer.cardId, 1)
       this.deck.push(card)
-      this.discard.push({ ...card })
+      // 战斗中：购入牌进手牌，方便立刻看到；层间休整只进卡组
+      if (this.phase === 'combat') {
+        this.hand.push({ ...card })
+      }
       this.shop = this.shop.filter((o) => o.offerId !== offerId)
       this.pushLog(`购入「${offer.name}」(-${offer.price}金)`)
-      this.tryAutoMerge(offer.cardId, 1)
+      this.mergeAllPossible()
       return true
     },
 
@@ -285,6 +296,18 @@ export const useGameStore = defineStore('game', {
       const s = scaleStats(tpl.base, card.star)
       const starLabel = '★'.repeat(card.star)
 
+      this.applyCardEffects(s)
+      this.pushLog(`打出 ${starLabel}${card.name}`)
+
+      if (card.star >= MAX_STAR && tpl.ultimate) {
+        this.applyCardEffects(tpl.ultimate.effect)
+        this.pushLog(`触发大招「${tpl.ultimate.name}」！`)
+        this.showMergeToast(`大招：${tpl.ultimate.name}`)
+      }
+    },
+
+    applyCardEffects(s) {
+      if (!s) return
       if (s.block) this.block += s.block
       if (s.thorns) this.thorns += s.thorns
       if (s.energy) this.energy += s.energy
@@ -293,6 +316,10 @@ export const useGameStore = defineStore('game', {
         this.hp += heal
       }
       if (s.draw) this.drawCards(s.draw)
+      if (s.weaken && this.enemy) {
+        this.enemy.damage = Math.max(1, this.enemy.damage - s.weaken)
+        this.pushLog(`${this.enemy.name} 攻击被削弱 ${s.weaken}。`)
+      }
 
       let dmg = s.damage || 0
       const hits = s.hits || (dmg ? 1 : 0)
@@ -301,19 +328,17 @@ export const useGameStore = defineStore('game', {
       }
 
       for (let i = 0; i < hits; i++) {
-        this.dealDamageToEnemy(dmg)
+        this.dealDamageToEnemy(dmg, !!s.pierce)
       }
       if (s.burn && this.enemy) {
         this.enemy.burnStacks += s.burn
       }
-
-      this.pushLog(`打出 ${starLabel}${card.name}`)
     },
 
-    dealDamageToEnemy(raw) {
+    dealDamageToEnemy(raw, pierce = false) {
       if (!this.enemy || raw <= 0) return
       let dmg = raw
-      if (this.enemy.block > 0) {
+      if (!pierce && this.enemy.block > 0) {
         const absorbed = Math.min(this.enemy.block, dmg)
         this.enemy.block -= absorbed
         dmg -= absorbed
@@ -417,28 +442,66 @@ export const useGameStore = defineStore('game', {
       this.enterFloor()
     },
 
+    /** 将一张同名同星的三张合成一张更高星；成功返回 true */
     tryAutoMerge(cardId, star) {
-      if (star >= MAX_STAR) return
+      if (star >= MAX_STAR) return false
       const matches = this.deck.filter((c) => c.cardId === cardId && c.star === star)
-      if (matches.length < MERGE_COUNT) return
+      if (matches.length < MERGE_COUNT) return false
 
       const remove = matches.slice(0, MERGE_COUNT)
       const removeUids = new Set(remove.map((c) => c.uid))
       this.deck = this.deck.filter((c) => !removeUids.has(c.uid))
-      // also clean combat piles of removed cards
       this.drawPile = this.drawPile.filter((c) => !removeUids.has(c.uid))
       this.hand = this.hand.filter((c) => !removeUids.has(c.uid))
       this.discard = this.discard.filter((c) => !removeUids.has(c.uid))
 
       const upgraded = createCardInstance(cardId, star + 1)
       this.deck.push(upgraded)
-      if (this.phase === 'combat') this.discard.push({ ...upgraded })
-      this.pushLog(`合成成功！获得 ${'★'.repeat(star + 1)}${upgraded.name}`)
+      // 战斗中把升星牌塞进手牌，玩家能立刻看到 ★★ / ★★★
+      if (this.phase === 'combat') {
+        this.hand.push({ ...upgraded })
+      }
+
+      const label = `${'★'.repeat(star + 1)}${upgraded.name}`
+      const ult = CARD_POOL[cardId]?.ultimate
+      if (star + 1 >= MAX_STAR && ult) {
+        this.pushLog(`合成成功！${label} 解锁大招「${ult.name}」`)
+        this.showMergeToast(`解锁大招：${ult.name}`)
+      } else {
+        this.pushLog(`合成成功！获得 ${label}`)
+        this.showMergeToast(`合成成功：${label}`)
+      }
+      // 继续尝试同卡更高星连锁合成
       this.tryAutoMerge(cardId, star + 1)
+      return true
+    },
+
+    /** 反复扫描卡组，直到没有可合成组合 */
+    mergeAllPossible() {
+      let guard = 0
+      let merged = false
+      while (guard++ < 40) {
+        const ready = this.mergeGroups
+        if (!ready.length) break
+        const g = ready[0]
+        if (!this.tryAutoMerge(g.cardId, g.star)) break
+        merged = true
+      }
+      return merged
     },
 
     manualMerge(cardId, star) {
-      this.tryAutoMerge(cardId, star)
+      const ok = this.tryAutoMerge(cardId, star)
+      if (ok) this.mergeAllPossible()
+      return ok
+    },
+
+    showMergeToast(msg) {
+      this.mergeToast = msg
+      clearTimeout(this._toastTimer)
+      this._toastTimer = setTimeout(() => {
+        if (this.mergeToast === msg) this.mergeToast = ''
+      }, 2200)
     },
 
     toggleMergePanel(show) {

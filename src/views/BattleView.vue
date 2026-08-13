@@ -97,11 +97,13 @@
 
     <MergeModal
       v-if="game.showMerge"
-      :groups="game.mergeGroups"
+      :progress="game.mergeProgress"
       :deck="game.deck"
       @close="game.toggleMergePanel(false)"
-      @merge="onMerge"
+      @merge="(cardId, star) => game.manualMerge(cardId, star)"
     />
+
+    <div v-if="game.mergeToast" class="merge-toast">{{ game.mergeToast }}</div>
   </main>
 
   <main v-else class="view battle">
@@ -149,10 +151,6 @@ const handCards = computed(() =>
     desc: getCardDesc(CARD_POOL[c.cardId], c.star),
   })),
 )
-
-function onMerge(cardId, star) {
-  game.manualMerge(cardId, star)
-}
 </script>
 
 <style scoped>
@@ -328,6 +326,22 @@ function onMerge(cardId, star) {
 
 .fallback a {
   color: var(--ember);
+}
+
+.merge-toast {
+  position: fixed;
+  top: 18%;
+  left: 50%;
+  z-index: 60;
+  transform: translateX(-50%);
+  padding: 14px 28px;
+  background: var(--blood);
+  color: var(--paper);
+  font-family: var(--font-display);
+  letter-spacing: 0.12em;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.35s ease both;
+  pointer-events: none;
 }
 
 @media (max-width: 1100px) {

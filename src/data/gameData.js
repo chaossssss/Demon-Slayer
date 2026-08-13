@@ -73,7 +73,7 @@ export const CLASSES = {
   },
 }
 
-/** 卡牌模板。星级在实例上叠加倍率 */
+/** 卡牌模板。星级叠加倍率；三星解锁专属大招 ultimate */
 export const CARD_POOL = {
   slash: {
     id: 'slash',
@@ -85,6 +85,11 @@ export const CARD_POOL = {
     classes: ['swordsman', 'guardian'],
     base: { damage: 8 },
     desc: (s) => `造成 ${s.damage} 点伤害`,
+    ultimate: {
+      name: '破军一闪',
+      effect: { damage: 28, pierce: true },
+      desc: (e) => `额外造成 ${e.damage} 点穿透伤害`,
+    },
   },
   focus_strike: {
     id: 'focus_strike',
@@ -96,6 +101,11 @@ export const CARD_POOL = {
     classes: ['swordsman'],
     base: { damage: 16 },
     desc: (s) => `造成 ${s.damage} 点伤害`,
+    ultimate: {
+      name: '无想剑',
+      effect: { damage: 40, energy: 1 },
+      desc: (e) => `额外造成 ${e.damage} 点伤害，回复 ${e.energy} 能量`,
+    },
   },
   whirlwind: {
     id: 'whirlwind',
@@ -107,6 +117,11 @@ export const CARD_POOL = {
     classes: ['swordsman'],
     base: { damage: 5, hits: 2 },
     desc: (s) => `造成 ${s.damage} 点伤害 ${s.hits} 次`,
+    ultimate: {
+      name: '千刃风暴',
+      effect: { damage: 8, hits: 5 },
+      desc: (e) => `额外造成 ${e.damage} 点伤害 ${e.hits} 次`,
+    },
   },
   guard: {
     id: 'guard',
@@ -118,6 +133,11 @@ export const CARD_POOL = {
     classes: ['swordsman', 'mage', 'assassin', 'guardian'],
     base: { block: 6 },
     desc: (s) => `获得 ${s.block} 点护甲`,
+    ultimate: {
+      name: '金刚壁',
+      effect: { block: 22, heal: 6 },
+      desc: (e) => `额外获得 ${e.block} 护甲，回复 ${e.heal} 生命`,
+    },
   },
   ember: {
     id: 'ember',
@@ -129,6 +149,11 @@ export const CARD_POOL = {
     classes: ['mage'],
     base: { damage: 7, burn: 2 },
     desc: (s) => `造成 ${s.damage} 点伤害，施加 ${s.burn} 灼烧`,
+    ultimate: {
+      name: '赤莲咒',
+      effect: { damage: 18, burn: 8 },
+      desc: (e) => `额外造成 ${e.damage} 点伤害，施加 ${e.burn} 灼烧`,
+    },
   },
   inferno: {
     id: 'inferno',
@@ -140,6 +165,11 @@ export const CARD_POOL = {
     classes: ['mage'],
     base: { damage: 12, burn: 4 },
     desc: (s) => `造成 ${s.damage} 点伤害，施加 ${s.burn} 灼烧`,
+    ultimate: {
+      name: '焚天劫',
+      effect: { damage: 32, burn: 12, pierce: true },
+      desc: (e) => `额外造成 ${e.damage} 点穿透伤害，施加 ${e.burn} 灼烧`,
+    },
   },
   ward: {
     id: 'ward',
@@ -151,6 +181,11 @@ export const CARD_POOL = {
     classes: ['mage'],
     base: { block: 5, heal: 2 },
     desc: (s) => `获得 ${s.block} 护甲，回复 ${s.heal} 生命`,
+    ultimate: {
+      name: '灵域护持',
+      effect: { block: 16, heal: 12, energy: 1 },
+      desc: (e) => `额外获得 ${e.block} 护甲、回复 ${e.heal} 生命与 ${e.energy} 能量`,
+    },
   },
   mana_surge: {
     id: 'mana_surge',
@@ -162,6 +197,11 @@ export const CARD_POOL = {
     classes: ['mage'],
     base: { energy: 2 },
     desc: (s) => `获得 ${s.energy} 点能量`,
+    ultimate: {
+      name: '咒源爆发',
+      effect: { energy: 3, draw: 2, damage: 15 },
+      desc: (e) => `额外获得 ${e.energy} 能量、抽 ${e.draw} 张牌，并造成 ${e.damage} 点伤害`,
+    },
   },
   stab: {
     id: 'stab',
@@ -173,6 +213,11 @@ export const CARD_POOL = {
     classes: ['assassin'],
     base: { damage: 9 },
     desc: (s) => `造成 ${s.damage} 点伤害`,
+    ultimate: {
+      name: '穿心刺',
+      effect: { damage: 30, pierce: true, draw: 1 },
+      desc: (e) => `额外造成 ${e.damage} 点穿透伤害，抽 ${e.draw} 张牌`,
+    },
   },
   execute: {
     id: 'execute',
@@ -184,6 +229,11 @@ export const CARD_POOL = {
     classes: ['assassin'],
     base: { damage: 14, executeBonus: 10 },
     desc: (s) => `造成 ${s.damage} 点伤害；目标低于半血时额外 ${s.executeBonus}`,
+    ultimate: {
+      name: '绝命裁断',
+      effect: { damage: 36, executeBonus: 24, energy: 2 },
+      desc: (e) => `额外造成 ${e.damage} 点；半血以下再加 ${e.executeBonus}，并回复 ${e.energy} 能量`,
+    },
   },
   smoke: {
     id: 'smoke',
@@ -195,6 +245,11 @@ export const CARD_POOL = {
     classes: ['assassin'],
     base: { block: 4, draw: 1 },
     desc: (s) => `获得 ${s.block} 护甲，抽 ${s.draw} 张牌`,
+    ultimate: {
+      name: '影隐杀机',
+      effect: { block: 14, draw: 2, weaken: 4 },
+      desc: (e) => `额外获得 ${e.block} 护甲、抽 ${e.draw} 张牌，削弱敌人攻击 ${e.weaken}`,
+    },
   },
   backstab: {
     id: 'backstab',
@@ -206,6 +261,11 @@ export const CARD_POOL = {
     classes: ['assassin'],
     base: { damage: 11 },
     desc: (s) => `造成 ${s.damage} 点伤害`,
+    ultimate: {
+      name: '夜狩终焉',
+      effect: { damage: 34, pierce: true, heal: 8 },
+      desc: (e) => `额外造成 ${e.damage} 点穿透伤害，回复 ${e.heal} 生命`,
+    },
   },
   bash: {
     id: 'bash',
@@ -217,6 +277,11 @@ export const CARD_POOL = {
     classes: ['guardian'],
     base: { damage: 6, block: 3 },
     desc: (s) => `造成 ${s.damage} 点伤害，获得 ${s.block} 护甲`,
+    ultimate: {
+      name: '震地锤',
+      effect: { damage: 22, block: 12, weaken: 3 },
+      desc: (e) => `额外造成 ${e.damage} 点伤害，获得 ${e.block} 护甲，削弱敌人 ${e.weaken}`,
+    },
   },
   iron_wall: {
     id: 'iron_wall',
@@ -228,6 +293,11 @@ export const CARD_POOL = {
     classes: ['guardian'],
     base: { block: 10 },
     desc: (s) => `获得 ${s.block} 点护甲`,
+    ultimate: {
+      name: '不灭城垣',
+      effect: { block: 30, thorns: 8 },
+      desc: (e) => `额外获得 ${e.block} 护甲与 ${e.thorns} 反伤`,
+    },
   },
   riposte: {
     id: 'riposte',
@@ -239,6 +309,11 @@ export const CARD_POOL = {
     classes: ['guardian'],
     base: { block: 7, thorns: 4 },
     desc: (s) => `获得 ${s.block} 护甲与 ${s.thorns} 反伤`,
+    ultimate: {
+      name: '以守为攻',
+      effect: { block: 18, thorns: 12, damage: 16 },
+      desc: (e) => `额外获得 ${e.block} 护甲、${e.thorns} 反伤，并造成 ${e.damage} 点伤害`,
+    },
   },
   fortify: {
     id: 'fortify',
@@ -250,6 +325,11 @@ export const CARD_POOL = {
     classes: ['guardian'],
     base: { block: 18 },
     desc: (s) => `获得 ${s.block} 点护甲`,
+    ultimate: {
+      name: '天盾降临',
+      effect: { block: 40, heal: 15, thorns: 6 },
+      desc: (e) => `额外获得 ${e.block} 护甲、${e.thorns} 反伤，回复 ${e.heal} 生命`,
+    },
   },
   heal_potion: {
     id: 'heal_potion',
@@ -261,6 +341,11 @@ export const CARD_POOL = {
     classes: ['swordsman', 'mage', 'assassin', 'guardian'],
     base: { heal: 8 },
     desc: (s) => `回复 ${s.heal} 点生命`,
+    ultimate: {
+      name: '回春秘剂',
+      effect: { heal: 25, block: 10, energy: 1 },
+      desc: (e) => `额外回复 ${e.heal} 生命、获得 ${e.block} 护甲与 ${e.energy} 能量`,
+    },
   },
   heavy_slash: {
     id: 'heavy_slash',
@@ -272,6 +357,11 @@ export const CARD_POOL = {
     classes: ['swordsman', 'guardian'],
     base: { damage: 22 },
     desc: (s) => `造成 ${s.damage} 点伤害`,
+    ultimate: {
+      name: '天裂斩',
+      effect: { damage: 48, pierce: true, block: 8 },
+      desc: (e) => `额外造成 ${e.damage} 点穿透伤害，获得 ${e.block} 护甲`,
+    },
   },
 }
 
@@ -311,7 +401,17 @@ export function scaleStats(base, star) {
   return out
 }
 
+export function getUltimate(template) {
+  return template?.ultimate || null
+}
+
 export function getCardDesc(template, star) {
   const stats = scaleStats(template.base, star)
-  return template.desc(stats)
+  let text = template.desc(stats)
+  if (star >= MAX_STAR && template.ultimate) {
+    text += `。【大招·${template.ultimate.name}】${template.ultimate.desc(template.ultimate.effect)}`
+  } else if (template.ultimate) {
+    text += `（★★★解锁大招「${template.ultimate.name}」）`
+  }
+  return text
 }
