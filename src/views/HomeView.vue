@@ -39,10 +39,13 @@ progress.checkUnlocks()
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
   gap: 48px;
-  align-items: end;
+  align-items: center;
+  align-content: center;
   max-width: 1180px;
   margin: 0 auto;
-  padding-top: 8vh;
+  min-height: calc(100vh - 80px);
+  padding-top: 0;
+  box-sizing: border-box;
 }
 
 .hero {
@@ -116,8 +119,7 @@ progress.checkUnlocks()
 @media (max-width: 900px) {
   .home {
     grid-template-columns: 1fr;
-    align-items: start;
-    padding-top: 6vh;
+    min-height: calc(100vh - 64px);
   }
 }
 </style>
