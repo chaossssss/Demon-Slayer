@@ -10,7 +10,7 @@ import {
   MULTI_ENEMY_FLOORS,
   RARITY_WEIGHT,
   SHOP_SIZE,
-  TURN_START_COST1_CARDS,
+  TURN_START_STAR1_CARDS,
   getCardTargetCount,
   scaleStats,
 } from '@/data/gameData'
@@ -199,17 +199,21 @@ export const useGameStore = defineStore('game', {
     relicMods() {
       return aggregateTreasureEffects(this.ownedTreasures)
     },
-    /** 全部同名同星进度（含未满 3 张），便于合成面板展示 */
+    /** 全部同名同星进度（按 uid 去重，防止同一张牌被重复计数） */
     mergeProgress(state) {
       const map = new Map()
+      const seenUid = new Set()
       for (const c of state.deck) {
+        if (!c?.uid || seenUid.has(c.uid)) continue
+        seenUid.add(c.uid)
         if (c.star >= MAX_STAR) continue
-        const key = `${c.cardId}_${c.star}`
+        const star = Number(c.star) || 1
+        const key = `${c.cardId}_${star}`
         if (!map.has(key)) {
           map.set(key, {
             key,
             cardId: c.cardId,
-            star: c.star,
+            star,
             count: 0,
             name: c.name,
           })
@@ -331,8 +335,8 @@ export const useGameStore = defineStore('game', {
         }
       }
 
-      // 每回合开始：从未打出的手牌之外，再获得 2 张 1 费牌（不超过手牌上限）
-      this.drawCostOneCards(TURN_START_COST1_CARDS)
+      // 每回合开始：从未打出的手牌之外，再获得 2 张一星牌（不超过手牌上限）
+      this.drawStarOneCards(TURN_START_STAR1_CARDS)
       this.tickEnemyBurn()
       this.checkCombatEnd()
     },
@@ -374,6 +378,7 @@ export const useGameStore = defineStore('game', {
       }
       this.shop = this.shop.filter((o) => o.offerId !== offerId)
       this.pushLog(`购入「${offer.name}」(-${offer.price}金)`)
+      this.deck = dedupeByUid(this.deck)
       this.mergeAllPossible()
       return true
     },
@@ -407,32 +412,32 @@ export const useGameStore = defineStore('game', {
       }
     },
 
-    /** 从抽牌/弃牌中取出至多 n 张费用为 1 的牌进手牌 */
-    drawCostOneCards(n) {
+    /** 从抽牌/弃牌中取出至多 n 张一星牌进手牌（费用不限） */
+    drawStarOneCards(n) {
       const room = Math.max(0, HAND_SIZE - this.hand.length)
       const need = Math.min(n, room)
       if (need <= 0) return 0
 
-      const cost1 = []
+      const pool = []
       const otherDraw = []
       for (const c of this.drawPile) {
-        if (c.cost === 1) cost1.push(c)
+        if (c.star === 1) pool.push(c)
         else otherDraw.push(c)
       }
       const otherDiscard = []
       for (const c of this.discard) {
-        if (c.cost === 1) cost1.push(c)
+        if (c.star === 1) pool.push(c)
         else otherDiscard.push(c)
       }
 
-      const shuffled = shuffle(cost1)
+      const shuffled = shuffle(pool)
       const taken = shuffled.slice(0, need)
       const remain = shuffled.slice(need)
       this.drawPile = shuffle([...otherDraw, ...remain])
       this.discard = otherDiscard
       this.hand.push(...taken)
       if (taken.length) {
-        this.pushLog(`获得 ${taken.length} 张 1 费牌。`)
+        this.pushLog(`获得 ${taken.length} 张一星牌。`)
       }
       return taken.length
     },
@@ -860,8 +865,20 @@ export const useGameStore = defineStore('game', {
 
     /** 将一张同名同星的三张合成一张更高星；成功返回 true */
     tryAutoMerge(cardId, star) {
-      if (star >= MAX_STAR) return false
-      const matches = this.deck.filter((c) => c.cardId === cardId && c.star === star)
+      const targetStar = Number(star) || 1
+      if (targetStar >= MAX_STAR) return false
+
+      this.deck = dedupeByUid(this.deck)
+
+      const matches = []
+      const seen = new Set()
+      for (const c of this.deck) {
+        if (!c?.uid || seen.has(c.uid)) continue
+        if (c.cardId === cardId && Number(c.star) === targetStar) {
+          seen.add(c.uid)
+          matches.push(c)
+        }
+      }
       if (matches.length < MERGE_COUNT) return false
 
       const remove = matches.slice(0, MERGE_COUNT)
@@ -871,16 +888,16 @@ export const useGameStore = defineStore('game', {
       this.hand = this.hand.filter((c) => !removeUids.has(c.uid))
       this.discard = this.discard.filter((c) => !removeUids.has(c.uid))
 
-      const upgraded = createCardInstance(cardId, star + 1)
+      const upgraded = createCardInstance(cardId, targetStar + 1)
       this.deck.push(upgraded)
       // 战斗中同一引用进手牌，避免拷贝造成双份
       if (this.phase === 'combat' && this.hand.length < HAND_SIZE) {
         this.hand.push(upgraded)
       }
 
-      const label = `${'★'.repeat(star + 1)}${upgraded.name}`
+      const label = `${'★'.repeat(targetStar + 1)}${upgraded.name}`
       const ult = CARD_POOL[cardId]?.ultimate
-      if (star + 1 >= MAX_STAR && ult) {
+      if (targetStar + 1 >= MAX_STAR && ult) {
         this.pushLog(`合成成功！${label} 解锁大招「${ult.name}」`)
         this.showMergeToast(`解锁大招：${ult.name}`)
       } else {
@@ -888,12 +905,13 @@ export const useGameStore = defineStore('game', {
         this.showMergeToast(`合成成功：${label}`)
       }
       // 继续尝试同卡更高星连锁合成
-      this.tryAutoMerge(cardId, star + 1)
+      this.tryAutoMerge(cardId, targetStar + 1)
       return true
     },
 
     /** 反复扫描卡组，直到没有可合成组合 */
     mergeAllPossible() {
+      this.deck = dedupeByUid(this.deck)
       let guard = 0
       let merged = false
       while (guard++ < 40) {
