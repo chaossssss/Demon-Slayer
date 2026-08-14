@@ -1,10 +1,10 @@
 <template>
   <main class="home">
-    <img class="home-bg" src="/assets/ui/home-bg.png" alt="" draggable="false" />
+    <img class="home-bg" src="/assets/ui/home-bg.jpg" alt="" draggable="false" />
 
     <div class="home-ui fade-up">
-      <RouterLink class="btn-start" to="/class" aria-label="开始游戏">
-        <img src="/assets/ui/btn-start.png" alt="开始游戏" draggable="false" />
+      <RouterLink class="btn-start" to="/class" aria-label="新的游戏">
+        <img src="/assets/ui/btn-start.png" alt="新的游戏" draggable="false" />
       </RouterLink>
     </div>
   </main>
@@ -29,7 +29,7 @@ import { RouterLink } from 'vue-router'
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: fill;
   object-position: center center;
   pointer-events: none;
   user-select: none;
@@ -37,12 +37,11 @@ import { RouterLink } from 'vue-router'
 
 .home-ui {
   position: absolute;
-  left: 50%;
-  bottom: clamp(28px, 6vh, 56px);
+  left: clamp(72px, 14vw, 180px);
+  top: clamp(34%, 38vh, 44%);
   z-index: 2;
-  transform: translateX(-50%);
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .btn-start {
@@ -52,10 +51,12 @@ import { RouterLink } from 'vue-router'
 }
 
 .btn-start img {
-  width: min(360px, 82vw);
+  width: min(280px, 42vw);
   height: auto;
   display: block;
   user-select: none;
+  /* 素材黑底透明化，贴合首页暗色主视觉 */
+  mix-blend-mode: lighten;
 }
 
 .btn-start:hover {
@@ -69,7 +70,13 @@ import { RouterLink } from 'vue-router'
 
 @media (max-width: 640px) {
   .home-ui {
-    bottom: 16px;
+    left: 16px;
+    top: auto;
+    bottom: 20px;
+  }
+
+  .btn-start img {
+    width: min(240px, 72vw);
   }
 }
 </style>

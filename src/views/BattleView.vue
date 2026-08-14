@@ -158,7 +158,6 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/stores/game'
 import StatusBar from '@/components/StatusBar.vue'
 import ShopPanel from '@/components/ShopPanel.vue'
@@ -169,7 +168,9 @@ import RelicBar from '@/components/RelicBar.vue'
 import { getCardDesc, CARD_POOL } from '@/data/gameData'
 
 const game = useGameStore()
-const { classId, floor, goldPerTurn } = storeToRefs(game)
+const classId = computed(() => game.classId)
+const floor = computed(() => game.floor)
+const goldPerTurn = computed(() => game.goldPerTurn)
 
 const ready = computed(() => !!classId.value)
 

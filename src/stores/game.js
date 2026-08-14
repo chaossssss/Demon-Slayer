@@ -29,6 +29,10 @@ const nextShopId = () => `s${shopSeq++}`
 const nextEnemyId = () => `e${enemySeq++}`
 const MULTI_LABELS = ['甲', '乙', '丙', '丁']
 
+/** 不挂到 Pinia store 上，避免 storeToRefs 读 null.effect */
+let activeTargets = null
+let toastTimer = null
+
 function shuffle(arr) {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -265,6 +269,7 @@ export const useGameStore = defineStore('game', {
       })
       this.pushLog(`以「${cls.name}」踏上斩鬼之路。`)
       // 开局使用职业固定初始卡组，不自动合成
+      activeTargets = null
       this.enterFloor()
     },
 
@@ -480,7 +485,7 @@ export const useGameStore = defineStore('game', {
     clearTargeting() {
       this.pendingCardUid = null
       this.selectedTargetIds = []
-      this._activeTargets = null
+      activeTargets = null
     },
 
     commitPlay(card, targetIds) {
@@ -490,24 +495,25 @@ export const useGameStore = defineStore('game', {
       if (idx >= 0) this.hand.splice(idx, 1)
 
       const idSet = new Set(targetIds)
-      this._activeTargets = this.enemies.filter((e) => idSet.has(e.uid) && e.hp > 0)
+      activeTargets = this.enemies.filter((e) => idSet.has(e.uid) && e.hp > 0)
       this.resolveCard(card)
-      this._activeTargets = null
+      activeTargets = null
       this.discard.push(card)
       this.checkCombatEnd()
     },
 
     resolveCard(card) {
       const tpl = CARD_POOL[card.cardId]
+      if (!tpl) return
       const s = scaleStats(tpl.base, card.star)
       const starLabel = '★'.repeat(card.star)
-      const targets = this._activeTargets || []
+      const targets = activeTargets || []
       const aliveBefore = new Set(targets.filter((e) => e.hp > 0).map((e) => e.uid))
 
       this.applyCardEffects(s, targets)
       this.pushLog(`打出 ${starLabel}${card.name}`)
 
-      if (card.star >= MAX_STAR && tpl.ultimate) {
+      if (card.star >= MAX_STAR && tpl.ultimate?.effect) {
         const effect = { ...tpl.ultimate.effect }
         const killHeal = effect.killHeal
         const normalHeal = effect.heal
@@ -555,7 +561,7 @@ export const useGameStore = defineStore('game', {
 
       let enemies = targets
       if (!enemies) {
-        enemies = this._activeTargets || []
+        enemies = activeTargets || []
       }
       const needsEnemy =
         !!(s.damage || s.burn || s.weaken || s.executeBonus || s.killHeal)
@@ -857,8 +863,8 @@ export const useGameStore = defineStore('game', {
 
     showMergeToast(msg) {
       this.mergeToast = msg
-      clearTimeout(this._toastTimer)
-      this._toastTimer = setTimeout(() => {
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => {
         if (this.mergeToast === msg) this.mergeToast = ''
       }, 2200)
     },

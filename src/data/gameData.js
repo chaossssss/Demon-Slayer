@@ -415,6 +415,7 @@ export function getCardTargetCount(template) {
 export function scaleStats(base, star) {
   const m = STAR_MULT[star] || 1
   const out = {}
+  if (!base) return out
   for (const [k, v] of Object.entries(base)) {
     out[k] = Math.round(v * m)
   }
@@ -426,12 +427,14 @@ export function getUltimate(template) {
 }
 
 export function getCardDesc(template, star) {
+  if (!template?.base || typeof template.desc !== 'function') return ''
   const stats = scaleStats(template.base, star)
   let text = template.desc(stats)
-  if (star >= MAX_STAR && template.ultimate) {
-    text += `。【大招·${template.ultimate.name}】${template.ultimate.desc(template.ultimate.effect)}`
-  } else if (template.ultimate) {
-    text += `（★★★解锁大招「${template.ultimate.name}」）`
+  const ult = template.ultimate
+  if (star >= MAX_STAR && ult?.effect && typeof ult.desc === 'function') {
+    text += `。【大招·${ult.name}】${ult.desc(ult.effect)}`
+  } else if (ult?.name) {
+    text += `（★★★解锁大招「${ult.name}」）`
   }
   return text
 }
