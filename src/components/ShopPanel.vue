@@ -6,7 +6,7 @@
         <span v-if="shopLocked" class="lock-badge">已锁定</span>
       </div>
       <p>
-        {{ shopLocked ? '货架已锁定，过关休整也不会刷新' : '结束回合保留货架 · 可锁定防止过关刷新' }}
+        {{ shopLocked ? '货架已锁定，结束回合不会刷新' : '每回合自动刷新 · 可锁定保留心仪卡牌' }}
       </p>
     </header>
 

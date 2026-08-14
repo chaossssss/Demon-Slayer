@@ -96,18 +96,22 @@
     </div>
 
     <section class="hand-dock" v-if="game.phase === 'combat'">
-      <div class="hand">
-        <GameCard
-          v-for="card in handCards"
-          :key="card.uid"
-          :card="card"
-          :playable="game.canPlay(card)"
-          :disabled="!game.canPlay(card)"
-          :class="{ armed: game.pendingCardUid === card.uid }"
-          @select="game.playCard(card.uid)"
-        />
+      <div class="hand-wrap">
+        <p class="hand-count">手牌 {{ game.hand.length }} / 10</p>
+        <div class="hand" :style="handStyle">
+          <GameCard
+            v-for="(card, i) in handCards"
+            :key="card.uid"
+            :card="card"
+            :playable="game.canPlay(card)"
+            :disabled="!game.canPlay(card)"
+            :class="{ armed: game.pendingCardUid === card.uid }"
+            :style="{ zIndex: i + 1 }"
+            @select="game.playCard(card.uid)"
+          />
+        </div>
       </div>
-      <button class="btn btn-primary end-turn" @click="game.endTurn">结束回合</button>
+      <button class="btn btn-primary end-turn" @click="game.endTurn()">结束回合</button>
     </section>
 
     <section class="between" v-else-if="game.phase === 'shop'">
@@ -208,6 +212,27 @@ const handCards = computed(() =>
     desc: getCardDesc(CARD_POOL[c.cardId], c.star),
   })),
 )
+
+/** 牌多时缩小并叠放，始终单行 */
+const handStyle = computed(() => {
+  const n = handCards.value.length
+  let scale = 1
+  let overlap = 0
+  if (n >= 9) {
+    scale = 0.78
+    overlap = 72
+  } else if (n >= 7) {
+    scale = 0.86
+    overlap = 56
+  } else if (n >= 6) {
+    scale = 0.92
+    overlap = 36
+  }
+  return {
+    '--hand-scale': String(scale),
+    '--hand-overlap': `${overlap}px`,
+  }
+})
 </script>
 
 <style scoped>
@@ -360,15 +385,58 @@ const handCards = computed(() =>
   justify-content: center;
   align-items: flex-end;
   gap: 18px;
-  padding: 18px 24px 22px;
+  padding: 12px 24px 18px;
   background: linear-gradient(180deg, transparent, rgba(12, 8, 5, 0.88) 35%);
+  pointer-events: none;
+}
+
+.hand-dock > * {
+  pointer-events: auto;
+}
+
+.hand-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: min(980px, calc(100vw - 180px));
+  min-width: 0;
+}
+
+.hand-count {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: rgba(236, 224, 200, 0.72);
 }
 
 .hand {
   display: flex;
-  gap: 10px;
+  flex-wrap: nowrap;
   justify-content: center;
-  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0;
+  width: 100%;
+  overflow: visible;
+  padding-top: 28px;
+  transform: scale(var(--hand-scale, 1));
+  transform-origin: bottom center;
+}
+
+.hand :deep(.card) {
+  flex: 0 0 auto;
+  margin-left: calc(var(--hand-overlap, 0px) * -1);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, margin 0.18s ease;
+}
+
+.hand :deep(.card:first-child) {
+  margin-left: 0;
+}
+
+.hand :deep(.card:hover:not(:disabled)),
+.hand :deep(.card.armed) {
+  transform: translateY(-28px) scale(1.04) !important;
+  z-index: 40 !important;
 }
 
 .hand :deep(.card.armed) {
@@ -379,6 +447,8 @@ const handCards = computed(() =>
 .end-turn {
   align-self: center;
   min-width: 140px;
+  flex-shrink: 0;
+  z-index: 30;
 }
 
 .between {

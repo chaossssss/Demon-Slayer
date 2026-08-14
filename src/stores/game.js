@@ -36,6 +36,8 @@ let activeTargets = null
 let toastTimer = null
 /** 下一回合发放一星牌数量；null 表示用默认 TURN_START_STAR1_CARDS */
 let pendingStar1DrawCount = null
+/** 本回合是否从抽牌堆发牌（进层首回合）；否则一律新生成 */
+let grantFromStarterDeck = false
 
 function shuffle(arr) {
   const a = [...arr]
@@ -277,6 +279,8 @@ export const useGameStore = defineStore('game', {
         mergeToast: '',
       })
       this.pushLog(`以「${cls.name}」踏上斩鬼之路。`)
+      pendingStar1DrawCount = null
+      grantFromStarterDeck = false
       // 开局使用职业固定初始卡组，不自动合成
       activeTargets = null
       this.enterFloor()
@@ -303,6 +307,7 @@ export const useGameStore = defineStore('game', {
       // 第 1 层开局发 5 张一星；其后每回合仍发 2 张
       pendingStar1DrawCount =
         this.floor === 1 ? FLOOR1_START_STAR1_CARDS : TURN_START_STAR1_CARDS
+      grantFromStarterDeck = true
       this.beginTurn()
     },
 
@@ -340,6 +345,12 @@ export const useGameStore = defineStore('game', {
           useProgressStore().recordRun({ floor: this.floor, won: false })
           return
         }
+      }
+
+      if (this.shopLocked) {
+        this.pushLog('市集已锁定，本回合保留货架。')
+      } else {
+        this.refreshShop()
       }
 
       // 发放一星牌：第 1 层开局 5 张，其余回合 2 张
@@ -405,7 +416,7 @@ export const useGameStore = defineStore('game', {
     toggleShopLock() {
       if (this.phase === 'victory' || this.phase === 'defeat') return
       this.shopLocked = !this.shopLocked
-      this.pushLog(this.shopLocked ? '市集已锁定，过关休整不会刷新货架。' : '市集已解锁，过关后将刷新货架。')
+      this.pushLog(this.shopLocked ? '市集已锁定，结束回合与过关休整都不会刷新。' : '市集已解锁，将按回合刷新货架。')
     },
 
     drawCards(n) {
@@ -421,34 +432,61 @@ export const useGameStore = defineStore('game', {
       }
     },
 
-    /** 从抽牌/弃牌中取出至多 n 张一星牌进手牌（费用不限） */
+    /**
+     * 回合发放一星牌：
+     * - 进层首回合：从抽牌堆拿一星（初始/过层卡组）
+     * - 战斗中后续回合：一律新生成一星进卡组与手牌
+     */
     drawStarOneCards(n) {
       const room = Math.max(0, HAND_SIZE - this.hand.length)
-      const need = Math.min(n, room)
-      if (need <= 0) return 0
-
-      const pool = []
-      const otherDraw = []
-      for (const c of this.drawPile) {
-        if (c.star === 1) pool.push(c)
-        else otherDraw.push(c)
-      }
-      const otherDiscard = []
-      for (const c of this.discard) {
-        if (c.star === 1) pool.push(c)
-        else otherDiscard.push(c)
+      const need = Math.min(Math.max(0, n), room)
+      if (need <= 0) {
+        if (n > 0 && this.hand.length >= HAND_SIZE) {
+          this.pushLog('手牌已满（10/10），本回合未获得新牌。')
+        }
+        return 0
       }
 
-      const shuffled = shuffle(pool)
-      const taken = shuffled.slice(0, need)
-      const remain = shuffled.slice(need)
-      this.drawPile = shuffle([...otherDraw, ...remain])
-      this.discard = otherDiscard
-      this.hand.push(...taken)
-      if (taken.length) {
-        this.pushLog(`获得 ${taken.length} 张一星牌。`)
+      let got = 0
+      const fromStarter = grantFromStarterDeck
+      grantFromStarterDeck = false
+
+      if (fromStarter) {
+        const star1 = []
+        const otherDraw = []
+        for (const c of this.drawPile) {
+          if (Math.floor(Number(c.star)) === 1) star1.push(c)
+          else otherDraw.push(c)
+        }
+        const shuffled = shuffle(star1)
+        const taken = shuffled.slice(0, need)
+        const remain = shuffled.slice(taken.length)
+        this.drawPile = shuffle([...otherDraw, ...remain])
+        this.hand = [...this.hand, ...taken]
+        got += taken.length
       }
-      return taken.length
+
+      const classPool = Object.values(CARD_POOL).filter((c) =>
+        c.classes.includes(this.classId),
+      )
+      const minted = []
+      while (got < need && this.hand.length + minted.length < HAND_SIZE && classPool.length) {
+        const tpl = pickWeighted(classPool)
+        const card = createCardInstance(tpl.id, 1)
+        this.deck.push(card)
+        minted.push(card)
+        got += 1
+      }
+      if (minted.length) {
+        this.hand = [...this.hand, ...minted]
+      }
+
+      if (got > 0) {
+        this.pushLog(`回合补给：获得 ${got} 张一星牌（手牌 ${this.hand.length}/${HAND_SIZE}）。`)
+      } else if (need > 0) {
+        this.pushLog('本回合未能获得新牌。')
+      }
+      return got
     },
 
     playCard(uid) {
@@ -720,6 +758,8 @@ export const useGameStore = defineStore('game', {
         useProgressStore().recordRun({ floor: this.floor, won: false })
         return
       }
+      // 战斗已结束（通关选宝物等）则不再开新回合发牌
+      if (this.phase !== 'combat') return
       this.beginTurn()
     },
 
