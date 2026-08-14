@@ -15,29 +15,63 @@
       :deck-count="game.deck.length"
     />
 
+    <RelicBar :treasures="game.ownedTreasures" />
+
     <div class="arena">
       <section class="enemy-zone panel">
-        <div v-if="game.enemy && game.phase !== 'victory'" class="enemy">
-          <div class="enemy-badge" :class="{ elite: game.enemy.elite, boss: game.enemy.boss }">
-            {{ game.enemy.boss ? 'BOSS' : game.enemy.elite ? '精英' : '妖鬼' }}
-          </div>
-          <h2>{{ game.enemy.name }}</h2>
-          <div class="intent">意图：攻击 {{ intentDamage }}</div>
-          <div class="meter">
-            <div class="meter-label">
-              <span>生命</span>
-              <span>{{ game.enemy.hp }} / {{ game.enemy.maxHp }}</span>
+        <div v-if="game.phase === 'combat' && game.enemies.length" class="enemy-list">
+          <p v-if="game.pendingCardUid" class="target-hint">
+            选择 {{ game.targetingNeed }} 个目标（已选 {{ game.selectedTargetIds.length }}）
+            <button type="button" class="btn-link" @click="game.cancelTargeting">取消</button>
+          </p>
+          <div
+            v-for="e in game.enemies"
+            :key="e.uid"
+            class="enemy"
+            :class="{
+              dead: e.hp <= 0,
+              selected: game.selectedTargetIds.includes(e.uid),
+              targeting: !!game.pendingCardUid && e.hp > 0,
+            }"
+            @click="onEnemyClick(e)"
+          >
+            <div class="enemy-badge" :class="{ elite: e.elite, boss: e.boss }">
+              {{ e.boss ? 'BOSS' : e.elite ? '精英' : '妖鬼' }}
             </div>
-            <div class="bar-track">
-              <div class="bar-fill hp" :style="{ width: enemyHpPct + '%' }" />
+            <h2>{{ e.name }}</h2>
+            <div class="intent">意图：攻击 {{ intentDamageOf(e) }}</div>
+            <div class="meter">
+              <div class="meter-label">
+                <span>生命</span>
+                <span>{{ e.hp }} / {{ e.maxHp }}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill hp" :style="{ width: hpPct(e) + '%' }" />
+              </div>
             </div>
+            <p v-if="e.burnStacks" class="burn">灼烧 {{ e.burnStacks }}</p>
+            <p v-if="e.block" class="enemy-block">护甲 {{ e.block }}</p>
           </div>
-          <p v-if="game.enemy.burnStacks" class="burn">灼烧 {{ game.enemy.burnStacks }}</p>
-          <p v-if="game.enemy.block" class="enemy-block">护甲 {{ game.enemy.block }}</p>
         </div>
         <div v-else class="rest">
-          <h2>{{ game.phase === 'victory' ? '胜利' : '层间休整' }}</h2>
-          <p>{{ game.phase === 'victory' ? '十层鬼域已平定。' : '补充卡组，准备下一层。' }}</p>
+          <h2>
+            {{
+              game.phase === 'victory'
+                ? '胜利'
+                : game.phase === 'treasure'
+                  ? '拾取宝物'
+                  : '层间休整'
+            }}
+          </h2>
+          <p>
+            {{
+              game.phase === 'victory'
+                ? '十层鬼域已平定。'
+                : game.phase === 'treasure'
+                  ? '从三件宝物中选择一件，也可放弃。'
+                  : '补充卡组，准备下一层。'
+            }}
+          </p>
         </div>
       </section>
 
@@ -45,7 +79,7 @@
         :shop="game.shop"
         :gold="game.gold"
         :reroll-cost="rerollCost"
-        :disabled="game.phase === 'victory' || game.phase === 'defeat'"
+        :disabled="game.phase !== 'combat' && game.phase !== 'shop'"
         :shop-locked="game.shopLocked"
         @buy="game.buyCard"
         @reroll="game.rerollShop"
@@ -69,6 +103,7 @@
           :card="card"
           :playable="game.canPlay(card)"
           :disabled="!game.canPlay(card)"
+          :class="{ armed: game.pendingCardUid === card.uid }"
           @select="game.playCard(card.uid)"
         />
       </div>
@@ -79,6 +114,13 @@
       <p>可继续购买卡牌并合成，准备妥当后进入下一层。</p>
       <button class="btn btn-primary" @click="game.nextFloor">前往第 {{ game.floor + 1 }} 层</button>
     </section>
+
+    <TreasurePick
+      v-if="game.phase === 'treasure'"
+      :offers="game.treasureOffers"
+      @pick="game.pickTreasure"
+      @skip="game.skipTreasure"
+    />
 
     <div v-if="game.phase === 'victory' || game.phase === 'defeat'" class="result-overlay">
       <div class="result panel fade-up">
@@ -122,6 +164,8 @@ import StatusBar from '@/components/StatusBar.vue'
 import ShopPanel from '@/components/ShopPanel.vue'
 import GameCard from '@/components/GameCard.vue'
 import MergeModal from '@/components/MergeModal.vue'
+import TreasurePick from '@/components/TreasurePick.vue'
+import RelicBar from '@/components/RelicBar.vue'
 import { getCardDesc, CARD_POOL } from '@/data/gameData'
 
 const game = useGameStore()
@@ -129,23 +173,33 @@ const { classId, floor, goldPerTurn } = storeToRefs(game)
 
 const ready = computed(() => !!classId.value)
 
-const incomePreview = computed(
-  () => goldPerTurn.value + Math.floor((floor.value - 1) / 2) * 2,
-)
+const incomePreview = computed(() => {
+  const mods = game.relicMods
+  return (
+    Math.max(0, goldPerTurn.value + (mods.goldPerTurn || 0)) +
+    Math.floor((floor.value - 1) / 2) * 2 +
+    (mods.turnStartGold || 0)
+  )
+})
 
 const rerollCost = computed(() => 8 + floor.value)
 
-const enemyHpPct = computed(() => {
-  if (!game.enemy) return 0
-  return Math.max(0, Math.min(100, (game.enemy.hp / game.enemy.maxHp) * 100))
-})
+function hpPct(e) {
+  if (!e?.maxHp) return 0
+  return Math.max(0, Math.min(100, (e.hp / e.maxHp) * 100))
+}
 
-const intentDamage = computed(() => {
-  if (!game.enemy) return 0
-  let dmg = game.enemy.damage
-  if (game.enemy.intent === 'boss' && game.turn % 3 === 0) dmg = Math.round(dmg * 1.4)
+function intentDamageOf(e) {
+  if (!e) return 0
+  let dmg = e.damage
+  if (e.intent === 'boss' && game.turn % 3 === 0) dmg = Math.round(dmg * 1.4)
   return dmg
-})
+}
+
+function onEnemyClick(e) {
+  if (!game.pendingCardUid || e.hp <= 0) return
+  game.toggleTarget(e.uid)
+}
 
 const handCards = computed(() =>
   game.hand.map((c) => ({
@@ -175,12 +229,64 @@ const handCards = computed(() =>
   min-height: 320px;
 }
 
+.enemy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.target-hint {
+  margin: 0 0 4px;
+  padding: 8px 10px;
+  background: rgba(139, 42, 28, 0.12);
+  color: var(--blood);
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.btn-link {
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.enemy {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.enemy.targeting {
+  cursor: pointer;
+}
+
+.enemy.targeting:hover {
+  border-color: var(--ember);
+}
+
+.enemy.selected {
+  border-color: var(--blood);
+  background: rgba(139, 42, 28, 0.08);
+}
+
+.enemy.dead {
+  opacity: 0.45;
+  filter: grayscale(0.35);
+  pointer-events: none;
+}
+
 .enemy h2,
 .rest h2 {
   margin: 8px 0 10px;
   font-family: var(--font-display);
   letter-spacing: 0.12em;
-  font-size: 1.8rem;
+  font-size: 1.55rem;
 }
 
 .enemy-badge {
@@ -262,6 +368,11 @@ const handCards = computed(() =>
   gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+.hand :deep(.card.armed) {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
 }
 
 .end-turn {

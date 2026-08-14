@@ -29,9 +29,9 @@ export const CLASSES = {
     goldPerTurn: 14,
     unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'floors', value: 5 }
     starterDeck: [
-      { cardId: 'slash', count: 2 },
+      { cardId: 'ember', count: 2 },
       { cardId: 'heal_potion', count: 1 },
-      { cardId: 'guard', count: 2 },
+      { cardId: 'ward', count: 2 },
     ],
   },
   assassin: {
@@ -46,9 +46,9 @@ export const CLASSES = {
     goldPerTurn: 13,
     unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'wins', value: 2 }
     starterDeck: [
-      { cardId: 'slash', count: 2 },
+      { cardId: 'stab', count: 2 },
       { cardId: 'heal_potion', count: 1 },
-      { cardId: 'guard', count: 2 },
+      { cardId: 'smoke', count: 2 },
     ],
   },
   guardian: {
@@ -63,9 +63,9 @@ export const CLASSES = {
     goldPerTurn: 11,
     unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'wins', value: 4 }
     starterDeck: [
-      { cardId: 'slash', count: 2 },
+      { cardId: 'bash', count: 2 },
       { cardId: 'heal_potion', count: 1 },
-      { cardId: 'guard', count: 2 },
+      { cardId: 'iron_wall', count: 2 },
     ],
   },
 }
@@ -79,7 +79,7 @@ export const CARD_POOL = {
     cost: 1,
     rarity: 'common',
     price: 18,
-    classes: ['swordsman', 'guardian'],
+    classes: ['swordsman'],
     base: { damage: 8 },
     desc: (s) => `造成 ${s.damage} 点伤害`,
     ultimate: {
@@ -100,8 +100,9 @@ export const CARD_POOL = {
     desc: (s) => `造成 ${s.damage} 点伤害`,
     ultimate: {
       name: '无想剑',
-      effect: { damage: 40, energy: 1 },
-      desc: (e) => `额外造成 ${e.damage} 点伤害，回复 ${e.energy} 能量`,
+      effect: { damage: 40, energy: 1, heal: 8, killHeal: 20 },
+      desc: (e) =>
+        `额外造成 ${e.damage} 点伤害，回复 ${e.energy} 能量与 ${e.heal} 生命；若以此击杀则改为回复 ${e.killHeal} 生命`,
     },
   },
   whirlwind: {
@@ -112,12 +113,13 @@ export const CARD_POOL = {
     rarity: 'uncommon',
     price: 28,
     classes: ['swordsman'],
+    targetCount: 2,
     base: { damage: 5, hits: 2 },
-    desc: (s) => `造成 ${s.damage} 点伤害 ${s.hits} 次`,
+    desc: (s) => `选择至多 2 名敌人，各造成 ${s.damage} 点伤害 ${s.hits} 次`,
     ultimate: {
       name: '千刃风暴',
       effect: { damage: 8, hits: 5 },
-      desc: (e) => `额外造成 ${e.damage} 点伤害 ${e.hits} 次`,
+      desc: (e) => `对所选敌人各额外造成 ${e.damage} 点伤害 ${e.hits} 次`,
     },
   },
   guard: {
@@ -144,12 +146,13 @@ export const CARD_POOL = {
     rarity: 'common',
     price: 18,
     classes: ['mage'],
+    targetCount: 2,
     base: { damage: 7, burn: 2 },
-    desc: (s) => `造成 ${s.damage} 点伤害，施加 ${s.burn} 灼烧`,
+    desc: (s) => `选择至多 2 名敌人，各造成 ${s.damage} 点伤害并施加 ${s.burn} 灼烧`,
     ultimate: {
       name: '赤莲咒',
       effect: { damage: 18, burn: 8 },
-      desc: (e) => `额外造成 ${e.damage} 点伤害，施加 ${e.burn} 灼烧`,
+      desc: (e) => `对所选敌人各额外造成 ${e.damage} 点伤害，施加 ${e.burn} 灼烧`,
     },
   },
   inferno: {
@@ -160,12 +163,13 @@ export const CARD_POOL = {
     rarity: 'rare',
     price: 40,
     classes: ['mage'],
+    targetCount: 3,
     base: { damage: 12, burn: 4 },
-    desc: (s) => `造成 ${s.damage} 点伤害，施加 ${s.burn} 灼烧`,
+    desc: (s) => `选择至多 3 名敌人，各造成 ${s.damage} 点伤害并施加 ${s.burn} 灼烧`,
     ultimate: {
       name: '焚天劫',
       effect: { damage: 32, burn: 12, pierce: true },
-      desc: (e) => `额外造成 ${e.damage} 点穿透伤害，施加 ${e.burn} 灼烧`,
+      desc: (e) => `对所选敌人各额外造成 ${e.damage} 点穿透伤害，施加 ${e.burn} 灼烧`,
     },
   },
   ward: {
@@ -176,12 +180,13 @@ export const CARD_POOL = {
     rarity: 'common',
     price: 17,
     classes: ['mage'],
-    base: { block: 5, heal: 2 },
-    desc: (s) => `获得 ${s.block} 护甲，回复 ${s.heal} 生命`,
+    targetCount: 2,
+    base: { block: 5, heal: 2, burn: 1 },
+    desc: (s) => `获得 ${s.block} 护甲、回复 ${s.heal} 生命；选择至多 2 名敌人各施加 ${s.burn} 灼烧`,
     ultimate: {
       name: '灵域护持',
-      effect: { block: 16, heal: 12, energy: 1 },
-      desc: (e) => `额外获得 ${e.block} 护甲、回复 ${e.heal} 生命与 ${e.energy} 能量`,
+      effect: { block: 16, heal: 12, energy: 1, burn: 3 },
+      desc: (e) => `额外获得 ${e.block} 护甲、回复 ${e.heal} 生命与 ${e.energy} 能量；对所选敌人各施加 ${e.burn} 灼烧`,
     },
   },
   mana_surge: {
@@ -272,12 +277,13 @@ export const CARD_POOL = {
     rarity: 'common',
     price: 18,
     classes: ['guardian'],
+    targetCount: 2,
     base: { damage: 6, block: 3 },
-    desc: (s) => `造成 ${s.damage} 点伤害，获得 ${s.block} 护甲`,
+    desc: (s) => `选择至多 2 名敌人各造成 ${s.damage} 点伤害，并获得 ${s.block} 护甲`,
     ultimate: {
       name: '震地锤',
       effect: { damage: 22, block: 12, weaken: 3 },
-      desc: (e) => `额外造成 ${e.damage} 点伤害，获得 ${e.block} 护甲，削弱敌人 ${e.weaken}`,
+      desc: (e) => `对所选敌人各额外造成 ${e.damage} 点伤害并削弱 ${e.weaken}，获得 ${e.block} 护甲`,
     },
   },
   iron_wall: {
@@ -351,7 +357,7 @@ export const CARD_POOL = {
     cost: 2,
     rarity: 'rare',
     price: 44,
-    classes: ['swordsman', 'guardian'],
+    classes: ['swordsman'],
     base: { damage: 22 },
     desc: (s) => `造成 ${s.damage} 点伤害`,
     ultimate: {
@@ -388,6 +394,23 @@ export const MERGE_COUNT = 3
 export const HAND_SIZE = 5
 export const SHOP_SIZE = 3
 export const FLOORS_TO_WIN = 10
+
+/** 多怪层：层数 → 敌人数量 */
+export const MULTI_ENEMY_FLOORS = {
+  3: 2,
+  5: 3,
+  6: 2,
+  7: 3,
+}
+
+/** 卡牌需要点选的敌人数；未配置时：有伤害/灼烧/削弱则默认 1，否则 0 */
+export function getCardTargetCount(template) {
+  if (!template) return 0
+  if (template.targetCount != null) return template.targetCount
+  const b = template.base || {}
+  if (b.damage || b.burn || b.weaken || b.executeBonus) return 1
+  return 0
+}
 
 export function scaleStats(base, star) {
   const m = STAR_MULT[star] || 1

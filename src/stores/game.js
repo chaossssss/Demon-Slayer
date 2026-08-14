@@ -7,16 +7,27 @@ import {
   HAND_SIZE,
   MAX_STAR,
   MERGE_COUNT,
+  MULTI_ENEMY_FLOORS,
   RARITY_WEIGHT,
   SHOP_SIZE,
+  getCardTargetCount,
   scaleStats,
 } from '@/data/gameData'
 import { useProgressStore } from './progress'
+import {
+  TREASURE_POOL,
+  aggregateTreasureEffects,
+  getTreasure,
+  rollTreasureOffers,
+} from '@/data/treasures'
 
 let uid = 1
 let shopSeq = 1
+let enemySeq = 1
 const nextId = () => `c${uid++}`
 const nextShopId = () => `s${shopSeq++}`
+const nextEnemyId = () => `e${enemySeq++}`
+const MULTI_LABELS = ['甲', '乙', '丙', '丁']
 
 function shuffle(arr) {
   const a = [...arr]
@@ -62,9 +73,13 @@ function pickWeighted(cards) {
   return cards[cards.length - 1]
 }
 
-function makeEnemy(floor) {
-  const isBoss = floor >= FLOORS_TO_WIN
-  const isElite = floor % 3 === 0 && !isBoss
+/**
+ * @param {number} floor
+ * @param {{ forceNormal?: boolean, multiScale?: number }} [opts]
+ */
+function makeEnemy(floor, opts = {}) {
+  const isBoss = floor >= FLOORS_TO_WIN && !opts.forceNormal
+  const isElite = !opts.forceNormal && floor % 3 === 0 && !isBoss
   let pool = ENEMY_TEMPLATES.filter((e) => {
     if (isBoss) return e.boss
     if (isElite) return e.elite && !e.boss
@@ -72,14 +87,15 @@ function makeEnemy(floor) {
   })
   if (!pool.length) pool = ENEMY_TEMPLATES.filter((e) => !e.boss)
   const t = pool[Math.floor(Math.random() * pool.length)]
-  const scale = 1 + (floor - 1) * 0.18
+  const scale = (1 + (floor - 1) * 0.18) * (opts.multiScale ?? 1)
   const maxHp = Math.round(t.hp * scale)
   return {
+    uid: nextEnemyId(),
     id: t.id,
     name: isBoss ? t.name : `${t.name}`,
     maxHp,
     hp: maxHp,
-    damage: Math.round(t.damage * scale),
+    damage: Math.max(1, Math.round(t.damage * scale)),
     burn: t.burn || 0,
     blockChance: t.blockChance || 0,
     intent: t.intent || 'attack',
@@ -90,9 +106,24 @@ function makeEnemy(floor) {
   }
 }
 
+function makeFloorEnemies(floor) {
+  const count = MULTI_ENEMY_FLOORS[floor] || 1
+  const multiScale = count > 1 ? 0.72 : 1
+  const list = []
+  for (let i = 0; i < count; i++) {
+    const e = makeEnemy(floor, {
+      forceNormal: count > 1,
+      multiScale,
+    })
+    if (count > 1) e.name = `${e.name}·${MULTI_LABELS[i] || i + 1}`
+    list.push(e)
+  }
+  return list
+}
+
 export const useGameStore = defineStore('game', {
   state: () => ({
-    phase: 'idle', // idle | shop | combat | victory | defeat
+    phase: 'idle', // idle | treasure | shop | combat | victory | defeat
     classId: null,
     floor: 1,
     turn: 0,
@@ -110,7 +141,11 @@ export const useGameStore = defineStore('game', {
     discard: [],
     shop: [],
     shopLocked: false,
-    enemy: null,
+    treasures: [], // owned treasure ids
+    treasureOffers: [],
+    enemies: [],
+    pendingCardUid: null,
+    selectedTargetIds: [],
     log: [],
     selectedForMerge: [],
     showMerge: false,
@@ -120,6 +155,19 @@ export const useGameStore = defineStore('game', {
   getters: {
     classInfo(state) {
       return state.classId ? CLASSES[state.classId] : null
+    },
+    livingEnemies(state) {
+      return state.enemies.filter((e) => e.hp > 0)
+    },
+    /** 兼容单目标 UI：优先存活敌人 */
+    enemy(state) {
+      return state.enemies.find((e) => e.hp > 0) || state.enemies[0] || null
+    },
+    targetingNeed(state) {
+      if (!state.pendingCardUid) return 0
+      const card = state.hand.find((c) => c.uid === state.pendingCardUid)
+      if (!card) return 0
+      return getCardTargetCount(CARD_POOL[card.cardId])
     },
     cardView() {
       return (inst) => {
@@ -134,7 +182,17 @@ export const useGameStore = defineStore('game', {
       }
     },
     canPlay() {
-      return (card) => this.phase === 'combat' && this.energy >= card.cost && this.hp > 0
+      return (card) =>
+        this.phase === 'combat' &&
+        this.energy >= card.cost &&
+        this.hp > 0 &&
+        (!this.pendingCardUid || this.pendingCardUid === card.uid)
+    },
+    ownedTreasures(state) {
+      return state.treasures.map((id) => getTreasure(id)).filter(Boolean)
+    },
+    relicMods() {
+      return aggregateTreasureEffects(this.ownedTreasures)
     },
     /** 全部同名同星进度（含未满 3 张），便于合成面板展示 */
     mergeProgress(state) {
@@ -171,6 +229,7 @@ export const useGameStore = defineStore('game', {
       if (!cls) return
       uid = 1
       shopSeq = 1
+      enemySeq = 1
       const deck = []
       for (const { cardId, count } of cls.starterDeck) {
         for (let i = 0; i < count; i++) deck.push(createCardInstance(cardId, 1))
@@ -194,7 +253,11 @@ export const useGameStore = defineStore('game', {
         discard: [],
         shop: [],
         shopLocked: false,
-        enemy: null,
+        treasures: [],
+        treasureOffers: [],
+        enemies: [],
+        pendingCardUid: null,
+        selectedTargetIds: [],
         log: [],
         selectedForMerge: [],
         showMerge: false,
@@ -206,7 +269,8 @@ export const useGameStore = defineStore('game', {
     },
 
     enterFloor() {
-      this.enemy = makeEnemy(this.floor)
+      this.enemies = makeFloorEnemies(this.floor)
+      this.clearTargeting()
       this.block = 0
       this.thorns = 0
       // 去重后，战斗牌堆与卡组共用同一对象引用，避免「同 uid 双份」导致三星卡异常再现
@@ -215,7 +279,8 @@ export const useGameStore = defineStore('game', {
       this.hand = []
       this.discard = []
       this.phase = 'combat'
-      this.pushLog(`—— 第 ${this.floor} 层：遭遇 ${this.enemy.name} ——`)
+      const names = this.enemies.map((e) => e.name).join('、')
+      this.pushLog(`—— 第 ${this.floor} 层：遭遇 ${names} ——`)
       this.beginTurn()
     },
 
@@ -224,11 +289,36 @@ export const useGameStore = defineStore('game', {
       this.turn += 1
       this.block = 0
       this.thorns = 0
+      const mods = this.relicMods
       this.energy = this.maxEnergy
 
-      const income = this.goldPerTurn + Math.floor((this.floor - 1) / 2) * 2
+      if (mods.startBlock) this.block += mods.startBlock
+      if (mods.thornsFlat) this.thorns += mods.thornsFlat
+
+      const income =
+        Math.max(0, this.goldPerTurn + (mods.goldPerTurn || 0)) +
+        Math.floor((this.floor - 1) / 2) * 2 +
+        (mods.turnStartGold || 0)
       this.gold += income
       this.pushLog(`回合 ${this.turn}：获得 ${income} 金币。`)
+
+      if (mods.turnStartHpHeal) {
+        const heal = Math.min(mods.turnStartHpHeal, this.maxHp - this.hp)
+        if (heal > 0) {
+          this.hp += heal
+          this.pushLog(`宝物回春：回复 ${heal} 生命。`)
+        }
+      }
+      if (mods.turnStartHpLoss) {
+        this.hp = Math.max(0, this.hp - mods.turnStartHpLoss)
+        this.pushLog(`咒物反噬：失去 ${mods.turnStartHpLoss} 生命。`)
+        if (this.hp <= 0) {
+          this.phase = 'defeat'
+          this.pushLog('你倒下了……')
+          useProgressStore().recordRun({ floor: this.floor, won: false })
+          return
+        }
+      }
 
       if (this.shopLocked) {
         this.pushLog('市集已锁定，本回合保留货架。')
@@ -243,6 +333,7 @@ export const useGameStore = defineStore('game', {
     refreshShop() {
       const cls = this.classId
       const pool = Object.values(CARD_POOL).filter((c) => c.classes.includes(cls))
+      const priceMod = this.relicMods.shopPriceFlat || 0
       const offers = []
       for (let i = 0; i < SHOP_SIZE; i++) {
         const tpl = pickWeighted(pool)
@@ -250,12 +341,12 @@ export const useGameStore = defineStore('game', {
         offers.push({
           offerId: nextShopId(),
           cardId: tpl.id,
-          star: 1, // 市集只出售一星卡，绝不带入合成星级
+          star: 1,
           name: tpl.name,
           type: tpl.type,
           cost: tpl.cost,
           rarity: tpl.rarity,
-          price: tpl.price + Math.floor(this.floor * 1.5),
+          price: Math.max(5, tpl.price + Math.floor(this.floor * 1.5) + priceMod),
           desc: tpl.desc(stats),
           fromShop: true,
         })
@@ -312,11 +403,96 @@ export const useGameStore = defineStore('game', {
       const idx = this.hand.findIndex((c) => c.uid === uid)
       if (idx < 0) return
       const card = this.hand[idx]
+
+      if (this.pendingCardUid && this.pendingCardUid !== uid) {
+        this.clearTargeting()
+      }
+
       if (!this.canPlay(card)) return
 
+      const tpl = CARD_POOL[card.cardId]
+      const need = getCardTargetCount(tpl)
+      const living = this.livingEnemies
+
+      if (need <= 0) {
+        this.commitPlay(card, [])
+        return
+      }
+
+      if (!living.length) {
+        this.commitPlay(card, [])
+        return
+      }
+
+      // 存活敌人数不超过需求：自动全选并打出
+      if (living.length <= need) {
+        this.commitPlay(
+          card,
+          living.map((e) => e.uid),
+        )
+        return
+      }
+
+      // 进入点选目标模式（尚未扣费/出牌）
+      if (this.pendingCardUid === uid) return
+      this.pendingCardUid = uid
+      this.selectedTargetIds = []
+      this.pushLog(`选择 ${need} 个目标（「${card.name}」）`)
+    },
+
+    toggleTarget(enemyUid) {
+      if (!this.pendingCardUid || this.phase !== 'combat') return
+      const living = this.livingEnemies
+      if (!living.some((e) => e.uid === enemyUid)) return
+
+      const need = this.targetingNeed
+      const idx = this.selectedTargetIds.indexOf(enemyUid)
+      if (idx >= 0) {
+        this.selectedTargetIds.splice(idx, 1)
+        return
+      }
+      if (this.selectedTargetIds.length >= need) return
+      this.selectedTargetIds.push(enemyUid)
+
+      if (this.selectedTargetIds.length >= need) {
+        this.confirmTargets()
+      }
+    },
+
+    confirmTargets() {
+      if (!this.pendingCardUid) return
+      const card = this.hand.find((c) => c.uid === this.pendingCardUid)
+      if (!card || !this.canPlay(card)) {
+        this.clearTargeting()
+        return
+      }
+      const ids = [...this.selectedTargetIds]
+      this.clearTargeting()
+      this.commitPlay(card, ids)
+    },
+
+    cancelTargeting() {
+      if (!this.pendingCardUid) return
+      this.pushLog('取消选目标。')
+      this.clearTargeting()
+    },
+
+    clearTargeting() {
+      this.pendingCardUid = null
+      this.selectedTargetIds = []
+      this._activeTargets = null
+    },
+
+    commitPlay(card, targetIds) {
+      if (!this.canPlay(card)) return
       this.energy -= card.cost
-      this.hand.splice(idx, 1)
+      const idx = this.hand.findIndex((c) => c.uid === card.uid)
+      if (idx >= 0) this.hand.splice(idx, 1)
+
+      const idSet = new Set(targetIds)
+      this._activeTargets = this.enemies.filter((e) => idSet.has(e.uid) && e.hp > 0)
       this.resolveCard(card)
+      this._activeTargets = null
       this.discard.push(card)
       this.checkCombatEnd()
     },
@@ -325,72 +501,151 @@ export const useGameStore = defineStore('game', {
       const tpl = CARD_POOL[card.cardId]
       const s = scaleStats(tpl.base, card.star)
       const starLabel = '★'.repeat(card.star)
+      const targets = this._activeTargets || []
+      const aliveBefore = new Set(targets.filter((e) => e.hp > 0).map((e) => e.uid))
 
-      this.applyCardEffects(s)
+      this.applyCardEffects(s, targets)
       this.pushLog(`打出 ${starLabel}${card.name}`)
 
       if (card.star >= MAX_STAR && tpl.ultimate) {
-        this.applyCardEffects(tpl.ultimate.effect)
+        const effect = { ...tpl.ultimate.effect }
+        const killHeal = effect.killHeal
+        const normalHeal = effect.heal
+
+        if (killHeal) {
+          const { heal, killHeal: _kh, ...rest } = effect
+          this.applyCardEffects(rest, targets)
+          const killed = [...aliveBefore].some((id) => {
+            const e = this.enemies.find((x) => x.uid === id)
+            return e && e.hp <= 0
+          })
+          const amount = killed ? killHeal : normalHeal || 0
+          if (amount) {
+            const mods = this.relicMods
+            const healAmt = Math.max(0, amount + (mods.healFlat || 0))
+            const healed = Math.min(healAmt, this.maxHp - this.hp)
+            if (healed > 0) {
+              this.hp += healed
+              this.pushLog(
+                killed
+                  ? `无想剑击杀回血：回复 ${healed} 生命。`
+                  : `无想剑回血：回复 ${healed} 生命。`,
+              )
+            }
+          }
+        } else {
+          this.applyCardEffects(effect, targets)
+        }
+
         this.pushLog(`触发大招「${tpl.ultimate.name}」！`)
         this.showMergeToast(`大招：${tpl.ultimate.name}`)
       }
     },
 
-    applyCardEffects(s) {
-      if (!s) return
-      if (s.block) this.block += s.block
-      if (s.thorns) this.thorns += s.thorns
+    applyCardEffects(s, targets = null) {
+      if (!s) return { dealt: 0, killed: false }
+      const mods = this.relicMods
+      let dealt = 0
+
+      // 自身效果只结算一次
+      if (s.block) this.block += Math.max(0, s.block + (mods.blockFlat || 0))
+      if (s.thorns) this.thorns += s.thorns + (mods.thornsFlat || 0)
       if (s.energy) this.energy += s.energy
-      if (s.heal) {
-        const heal = Math.min(s.heal, this.maxHp - this.hp)
-        this.hp += heal
-      }
       if (s.draw) this.drawCards(s.draw)
-      if (s.weaken && this.enemy) {
-        this.enemy.damage = Math.max(1, this.enemy.damage - s.weaken)
-        this.pushLog(`${this.enemy.name} 攻击被削弱 ${s.weaken}。`)
+
+      let enemies = targets
+      if (!enemies) {
+        enemies = this._activeTargets || []
+      }
+      const needsEnemy =
+        !!(s.damage || s.burn || s.weaken || s.executeBonus || s.killHeal)
+      if (needsEnemy && (!enemies || !enemies.length)) {
+        enemies = this.livingEnemies.slice(0, 1)
       }
 
-      let dmg = s.damage || 0
-      const hits = s.hits || (dmg ? 1 : 0)
-      if (s.executeBonus && this.enemy && this.enemy.hp <= this.enemy.maxHp / 2) {
-        dmg += s.executeBonus
+      const aliveBefore = new Set((enemies || []).filter((e) => e.hp > 0).map((e) => e.uid))
+
+      for (const enemy of enemies || []) {
+        if (!enemy || enemy.hp <= 0) continue
+
+        if (s.weaken) {
+          enemy.damage = Math.max(1, enemy.damage - s.weaken)
+          this.pushLog(`${enemy.name} 攻击被削弱 ${s.weaken}。`)
+        }
+
+        let dmg = s.damage || 0
+        if (dmg) dmg += mods.damageFlat || 0
+        if (s.executeBonus && enemy.hp <= enemy.maxHp / 2) {
+          dmg += s.executeBonus
+        }
+        const hits = s.hits || (dmg ? 1 : 0)
+        for (let i = 0; i < hits; i++) {
+          dealt += this.dealDamageToEnemy(enemy, dmg, !!s.pierce)
+        }
+        if (s.burn) {
+          enemy.burnStacks += s.burn + (mods.burnFlat || 0)
+        }
       }
 
-      for (let i = 0; i < hits; i++) {
-        this.dealDamageToEnemy(dmg, !!s.pierce)
+      const killed = [...aliveBefore].some((id) => {
+        const e = this.enemies.find((x) => x.uid === id)
+        return e && e.hp <= 0
+      })
+
+      let healAmt = 0
+      if (s.killHeal && killed) {
+        healAmt = s.killHeal
+      } else if (s.heal) {
+        healAmt = s.heal
       }
-      if (s.burn && this.enemy) {
-        this.enemy.burnStacks += s.burn
+      if (healAmt) {
+        healAmt = Math.max(0, healAmt + (mods.healFlat || 0))
+        const heal = Math.min(healAmt, this.maxHp - this.hp)
+        if (heal > 0) {
+          this.hp += heal
+          if (s.killHeal && killed) {
+            this.pushLog(`击杀回血：回复 ${heal} 生命。`)
+          }
+        }
       }
+
+      if (dealt > 0 && mods.lifesteal) {
+        const heal = Math.min(Math.floor(dealt * mods.lifesteal), this.maxHp - this.hp)
+        if (heal > 0) this.hp += heal
+      }
+
+      return { dealt, killed }
     },
 
-    dealDamageToEnemy(raw, pierce = false) {
-      if (!this.enemy || raw <= 0) return
+    dealDamageToEnemy(enemy, raw, pierce = false) {
+      if (!enemy || raw <= 0) return 0
       let dmg = raw
-      if (!pierce && this.enemy.block > 0) {
-        const absorbed = Math.min(this.enemy.block, dmg)
-        this.enemy.block -= absorbed
+      if (!pierce && enemy.block > 0) {
+        const absorbed = Math.min(enemy.block, dmg)
+        enemy.block -= absorbed
         dmg -= absorbed
       }
-      this.enemy.hp = Math.max(0, this.enemy.hp - dmg)
+      enemy.hp = Math.max(0, enemy.hp - dmg)
+      return dmg
     },
 
     tickEnemyBurn() {
-      if (!this.enemy?.burnStacks) return
-      const burn = this.enemy.burnStacks
-      this.enemy.hp = Math.max(0, this.enemy.hp - burn)
-      this.enemy.burnStacks = Math.max(0, burn - 1)
-      this.pushLog(`${this.enemy.name} 受到 ${burn} 点灼烧。`)
+      for (const e of this.enemies) {
+        if (!e.burnStacks || e.hp <= 0) continue
+        const burn = e.burnStacks
+        e.hp = Math.max(0, e.hp - burn)
+        e.burnStacks = Math.max(0, burn - 1)
+        this.pushLog(`${e.name} 受到 ${burn} 点灼烧。`)
+      }
     },
 
     endTurn() {
       if (this.phase !== 'combat') return
-      // discard hand
+      this.clearTargeting()
       this.discard.push(...this.hand)
       this.hand = []
 
-      this.enemyAct()
+      this.enemiesAct()
       if (this.hp <= 0) {
         this.phase = 'defeat'
         this.pushLog('你倒下了……')
@@ -400,8 +655,16 @@ export const useGameStore = defineStore('game', {
       this.beginTurn()
     },
 
-    enemyAct() {
-      const e = this.enemy
+    enemiesAct() {
+      for (const e of this.enemies) {
+        if (e.hp <= 0) continue
+        this.enemyActOne(e)
+        if (this.hp <= 0) break
+      }
+      this.checkCombatEnd()
+    },
+
+    enemyActOne(e) {
       if (!e || e.hp <= 0) return
 
       if (e.blockChance && Math.random() < e.blockChance) {
@@ -411,6 +674,7 @@ export const useGameStore = defineStore('game', {
 
       let dmg = e.damage
       if (e.intent === 'boss' && this.turn % 3 === 0) dmg = Math.round(dmg * 1.4)
+      dmg += this.relicMods.damageTakenFlat || 0
 
       if (this.thorns > 0) {
         e.hp = Math.max(0, e.hp - this.thorns)
@@ -429,38 +693,96 @@ export const useGameStore = defineStore('game', {
       } else {
         this.pushLog(`${e.name} 的攻击被完全格挡。`)
       }
-
-      if (e.intent === 'burn' || e.burn) {
-        // flavor only; damage already applied
-      }
-
-      this.checkCombatEnd()
     },
 
     checkCombatEnd() {
-      if (!this.enemy) return
-      if (this.enemy.hp > 0) return
+      if (!this.enemies.length) return
+      if (this.livingEnemies.length > 0) return
 
-      const reward = 18 + this.floor * 6 + (this.enemy.elite ? 20 : 0) + (this.enemy.boss ? 50 : 0)
+      const anyElite = this.enemies.some((e) => e.elite)
+      const anyBoss = this.enemies.some((e) => e.boss)
+      const extra = Math.max(0, this.enemies.length - 1) * 10
+      const reward = 18 + this.floor * 6 + (anyElite ? 20 : 0) + (anyBoss ? 50 : 0) + extra
       this.gold += reward
       this.hand = []
       this.drawPile = []
       this.discard = []
+      this.clearTargeting()
       if (!this.shopLocked) {
         this.shop = []
       }
-      this.pushLog(`击败 ${this.enemy.name}！获得 ${reward} 金币。`)
+      const names = this.enemies.map((e) => e.name).join('、')
+      this.pushLog(`击败 ${names}！获得 ${reward} 金币。`)
 
-      if (this.enemy.boss || this.floor >= FLOORS_TO_WIN) {
+      if (anyBoss || this.floor >= FLOORS_TO_WIN) {
         this.phase = 'victory'
         this.pushLog('鬼域肃清，凯旋而归！')
         useProgressStore().recordRun({ floor: this.floor, won: true })
         return
       }
 
+      this.openTreasurePick()
+    },
+
+    openTreasurePick() {
+      const elite = this.enemies.some((e) => e.elite)
+      this.treasureOffers = rollTreasureOffers(this.treasures, {
+        elite,
+        floor: this.floor,
+      })
+      if (!this.treasureOffers.length) {
+        this.enterRestShop()
+        return
+      }
+      this.phase = 'treasure'
+      this.pushLog('发现散落宝物，可三选一（也可放弃）。')
+    },
+
+    pickTreasure(treasureId) {
+      if (this.phase !== 'treasure') return false
+      if (!this.treasureOffers.some((t) => t.id === treasureId)) return false
+      if (this.treasures.includes(treasureId)) return false
+
+      const t = TREASURE_POOL[treasureId]
+      if (!t) return false
+      this.treasures.push(treasureId)
+      this.applyTreasureGain(t)
+      this.treasureOffers = []
+      this.pushLog(`获得宝物「${t.name}」。`)
+      this.showMergeToast(`获得宝物：${t.name}`)
+      this.enterRestShop()
+      return true
+    },
+
+    skipTreasure() {
+      if (this.phase !== 'treasure') return
+      this.treasureOffers = []
+      this.pushLog('你放弃了本次宝物。')
+      this.enterRestShop()
+    },
+
+    applyTreasureGain(t) {
+      const e = t.effects || {}
+      if (e.maxHp) {
+        this.maxHp = Math.max(1, this.maxHp + e.maxHp)
+        if (e.maxHp > 0) this.hp = Math.min(this.maxHp, this.hp + e.maxHp)
+        else this.hp = Math.min(this.hp, this.maxHp)
+      }
+      if (e.maxEnergy) {
+        this.maxEnergy = Math.max(1, this.maxEnergy + e.maxEnergy)
+      }
+      if (e.goldPerTurn) {
+        this.goldPerTurn = Math.max(0, this.goldPerTurn + e.goldPerTurn)
+      }
+    },
+
+    enterRestShop() {
       this.phase = 'shop'
-      // heal a bit between floors
-      const heal = Math.min(8 + Math.floor(this.floor / 2), this.maxHp - this.hp)
+      const mods = this.relicMods
+      const heal = Math.min(
+        8 + Math.floor(this.floor / 2) + (mods.floorClearHeal || 0),
+        this.maxHp - this.hp,
+      )
       if (heal > 0) {
         this.hp += heal
         this.pushLog(`休整，回复 ${heal} 生命。`)
