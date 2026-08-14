@@ -6,7 +6,8 @@
         <button class="close" type="button" @click="$emit('close')">×</button>
       </header>
       <p class="hint">
-        收集 <strong>3 张同名同星</strong> 可合成更高星（最高 3 星）。购买或开局满足条件时会自动合成。
+        收集 <strong>3 张同名同星</strong> 可合成更高星（最高 3 星）。
+        市集购买凑满 3 张同名同星时会自动合成；也可在此手动合成。
         <strong>三星卡解锁专属大招</strong>，打出时额外触发强力效果。
       </p>
 

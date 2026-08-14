@@ -114,9 +114,23 @@
       <button class="btn btn-primary end-turn" @click="game.endTurn()">结束回合</button>
     </section>
 
-    <section class="between" v-else-if="game.phase === 'shop'">
-      <p>可继续购买卡牌并合成，准备妥当后进入下一层。</p>
-      <button class="btn btn-primary" @click="game.nextFloor">前往第 {{ game.floor + 1 }} 层</button>
+    <section class="hand-dock rest-dock" v-else-if="game.phase === 'shop'">
+      <div class="hand-wrap">
+        <p class="hand-count">我的卡组 {{ restCards.length }} 张 · 手牌 {{ game.hand.length }} 张将带入下一层</p>
+        <div class="hand" :style="restHandStyle">
+          <GameCard
+            v-for="(card, i) in restCards"
+            :key="card.uid"
+            :card="card"
+            :disabled="true"
+            :style="{ zIndex: i + 1 }"
+          />
+        </div>
+      </div>
+      <div class="between-actions">
+        <p>可继续购买卡牌并合成，准备妥当后进入下一层。</p>
+        <button class="btn btn-primary" @click="game.nextFloor">前往第 {{ game.floor + 1 }} 层</button>
+      </div>
     </section>
 
     <TreasurePick
@@ -213,9 +227,17 @@ const handCards = computed(() =>
   })),
 )
 
-/** 牌多时缩小并叠放，始终单行 */
-const handStyle = computed(() => {
-  const n = handCards.value.length
+/** 休整展示整副卡组（含手牌中的牌） */
+const restCards = computed(() =>
+  [...game.deck]
+    .sort((a, b) => b.star - a.star || a.name.localeCompare(b.name, 'zh'))
+    .map((c) => ({
+      ...c,
+      desc: getCardDesc(CARD_POOL[c.cardId], c.star),
+    })),
+)
+
+function handLayoutStyle(n) {
   let scale = 1
   let overlap = 0
   if (n >= 9) {
@@ -232,7 +254,11 @@ const handStyle = computed(() => {
     '--hand-scale': String(scale),
     '--hand-overlap': `${overlap}px`,
   }
-})
+}
+
+/** 牌多时缩小并叠放，始终单行 */
+const handStyle = computed(() => handLayoutStyle(handCards.value.length))
+const restHandStyle = computed(() => handLayoutStyle(restCards.value.length))
 </script>
 
 <style scoped>
@@ -451,13 +477,29 @@ const handStyle = computed(() => {
   z-index: 30;
 }
 
-.between {
-  margin-top: 28px;
+.rest-dock {
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 12px;
+}
+
+.between-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
+  flex-shrink: 0;
+  z-index: 30;
   color: var(--paper);
+  text-align: center;
+  max-width: 220px;
+}
+
+.between-actions p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(236, 224, 200, 0.82);
 }
 
 .result-overlay {

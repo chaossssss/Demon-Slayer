@@ -8,7 +8,7 @@ PC 端 Web 回合制卡牌游戏（灵感来自《杀戮尖塔》）：
 |----|------|
 | 技术栈 | Vue 3 + Pinia + Vue Router + JavaScript + Vite |
 | 平台 | PC Web（推荐桌面浏览器） |
-| 开发端口 | `http://localhost:9530/` |
+| 开发端口 | `http://localhost:9630/` |
 | 主题调性 | 斩鬼 / 和风暗色纸本：炭黑底、宣纸色面板、朱红血色、鎏金点缀 |
 
 ---
@@ -17,7 +17,7 @@ PC 端 Web 回合制卡牌游戏（灵感来自《杀戮尖塔》）：
 
 ```bash
 npm install
-npm run dev      # http://localhost:9530/
+npm run dev      # http://localhost:9630/
 npm run build
 npm run preview
 ```

@@ -10,8 +10,6 @@ import {
   MULTI_ENEMY_FLOORS,
   RARITY_WEIGHT,
   SHOP_SIZE,
-  TURN_START_STAR1_CARDS,
-  FLOOR1_START_STAR1_CARDS,
   getCardTargetCount,
   scaleStats,
 } from '@/data/gameData'
@@ -34,10 +32,6 @@ const MULTI_LABELS = ['甲', '乙', '丙', '丁']
 /** 不挂到 Pinia store 上，避免 storeToRefs 读 null.effect */
 let activeTargets = null
 let toastTimer = null
-/** 下一回合发放一星牌数量；null 表示用默认 TURN_START_STAR1_CARDS */
-let pendingStar1DrawCount = null
-/** 本回合是否从抽牌堆发牌（进层首回合）；否则一律新生成 */
-let grantFromStarterDeck = false
 
 function shuffle(arr) {
   const a = [...arr]
@@ -279,8 +273,6 @@ export const useGameStore = defineStore('game', {
         mergeToast: '',
       })
       this.pushLog(`以「${cls.name}」踏上斩鬼之路。`)
-      pendingStar1DrawCount = null
-      grantFromStarterDeck = false
       // 开局使用职业固定初始卡组，不自动合成
       activeTargets = null
       this.enterFloor()
@@ -291,11 +283,7 @@ export const useGameStore = defineStore('game', {
       this.clearTargeting()
       this.block = 0
       this.thorns = 0
-      // 去重后，战斗牌堆与卡组共用同一对象引用，避免「同 uid 双份」导致三星卡异常再现
       this.deck = dedupeByUid(this.deck)
-      this.drawPile = shuffle([...this.deck])
-      this.hand = []
-      this.discard = []
       this.phase = 'combat'
       const names = this.enemies.map((e) => e.name).join('、')
       this.pushLog(`—— 第 ${this.floor} 层：遭遇 ${names} ——`)
@@ -304,10 +292,20 @@ export const useGameStore = defineStore('game', {
       } else {
         this.refreshShop()
       }
-      // 第 1 层开局发 5 张一星；其后每回合仍发 2 张
-      pendingStar1DrawCount =
-        this.floor === 1 ? FLOOR1_START_STAR1_CARDS : TURN_START_STAR1_CARDS
-      grantFromStarterDeck = true
+
+      if (this.floor === 1) {
+        // 仅开局发一次初始手牌；之后任何回合都不再自动加牌
+        this.discard = []
+        this.drawPile = shuffle([...this.deck])
+        this.hand = this.drawPile.splice(0, Math.min(HAND_SIZE, this.drawPile.length))
+        this.pushLog(`开战手牌：${this.hand.length} 张。`)
+      } else {
+        // 过层：保留手牌，其余卡组牌进抽牌堆
+        this.discard = []
+        this.hand = this.hand.filter((c) => c?.uid && this.deck.some((d) => d.uid === c.uid))
+        const handUids = new Set(this.hand.map((c) => c.uid))
+        this.drawPile = shuffle(this.deck.filter((c) => !handUids.has(c.uid)))
+      }
       this.beginTurn()
     },
 
@@ -353,10 +351,7 @@ export const useGameStore = defineStore('game', {
         this.refreshShop()
       }
 
-      // 发放一星牌：第 1 层开局 5 张，其余回合 2 张
-      const drawN = pendingStar1DrawCount ?? TURN_START_STAR1_CARDS
-      pendingStar1DrawCount = null
-      this.drawStarOneCards(drawN)
+      // 普通回合不发牌、不生成新卡
       this.tickEnemyBurn()
       this.checkCombatEnd()
     },
@@ -385,6 +380,49 @@ export const useGameStore = defineStore('game', {
       this.shop = offers
     },
 
+    /**
+     * 把已入卡组的牌放到可接触区域（手牌优先，满则进抽牌堆）。
+     * 战斗与休整都适用，避免合成/购买后牌只存在于 deck、界面与下一层手牌都看不到。
+     */
+    placeInCombat(card) {
+      if (!card?.uid) return
+      if (this.phase !== 'combat' && this.phase !== 'shop') return
+      const zones = [this.hand, this.drawPile, this.discard]
+      if (zones.some((z) => z.some((c) => c.uid === card.uid))) return
+      if (this.hand.length < HAND_SIZE) this.hand.push(card)
+      else this.drawPile.push(card)
+    },
+
+    /** 通关后把手牌外的战斗牌收回，供休整展示并带入下一层 */
+    gatherHandAfterCombat() {
+      const seen = new Set()
+      const kept = []
+      for (const c of this.hand) {
+        if (!c?.uid || seen.has(c.uid)) continue
+        if (!this.deck.some((d) => d.uid === c.uid)) continue
+        seen.add(c.uid)
+        kept.push(c)
+      }
+      const returning = [...this.drawPile, ...this.discard]
+      this.drawPile = []
+      this.discard = []
+      for (const c of returning) {
+        if (!c?.uid || seen.has(c.uid)) continue
+        if (!this.deck.some((d) => d.uid === c.uid)) continue
+        seen.add(c.uid)
+        kept.push(c)
+      }
+      for (const c of this.deck) {
+        if (!c?.uid || seen.has(c.uid)) continue
+        seen.add(c.uid)
+        kept.push(c)
+      }
+      this.hand = kept.slice(0, HAND_SIZE)
+      this.drawPile = kept.slice(HAND_SIZE)
+      // 弃牌收回后可能凑满 3 张，按最低星级自动合成一波
+      this.mergeAllPossible()
+    },
+
     buyCard(offerId) {
       const offer = this.shop.find((o) => o.offerId === offerId)
       if (!offer || this.gold < offer.price) return false
@@ -392,14 +430,13 @@ export const useGameStore = defineStore('game', {
       // 购买始终生成一星实例，忽略货架上任何异常字段
       const card = createCardInstance(offer.cardId, 1)
       this.deck.push(card)
-      // 战斗中：同一引用进手牌（不要 {...card} 拷贝，否则会同 uid 双份）
-      if (this.phase === 'combat' && this.hand.length < HAND_SIZE) {
-        this.hand.push(card)
-      }
+      // 战斗中同一引用进手牌/抽牌堆，不要 {...card} 拷贝
+      this.placeInCombat(card)
       this.shop = this.shop.filter((o) => o.offerId !== offerId)
       this.pushLog(`购入「${offer.name}」(-${offer.price}金)`)
       this.deck = dedupeByUid(this.deck)
-      this.mergeAllPossible()
+      // 只合成刚买的这张牌，绝不能扫整副卡组（否则会把无关牌也吞掉）
+      this.mergeAfterGain(card.cardId, 1)
       return true
     },
 
@@ -430,63 +467,6 @@ export const useGameStore = defineStore('game', {
         const card = this.drawPile.shift()
         if (card) this.hand.push(card)
       }
-    },
-
-    /**
-     * 回合发放一星牌：
-     * - 进层首回合：从抽牌堆拿一星（初始/过层卡组）
-     * - 战斗中后续回合：一律新生成一星进卡组与手牌
-     */
-    drawStarOneCards(n) {
-      const room = Math.max(0, HAND_SIZE - this.hand.length)
-      const need = Math.min(Math.max(0, n), room)
-      if (need <= 0) {
-        if (n > 0 && this.hand.length >= HAND_SIZE) {
-          this.pushLog('手牌已满（10/10），本回合未获得新牌。')
-        }
-        return 0
-      }
-
-      let got = 0
-      const fromStarter = grantFromStarterDeck
-      grantFromStarterDeck = false
-
-      if (fromStarter) {
-        const star1 = []
-        const otherDraw = []
-        for (const c of this.drawPile) {
-          if (Math.floor(Number(c.star)) === 1) star1.push(c)
-          else otherDraw.push(c)
-        }
-        const shuffled = shuffle(star1)
-        const taken = shuffled.slice(0, need)
-        const remain = shuffled.slice(taken.length)
-        this.drawPile = shuffle([...otherDraw, ...remain])
-        this.hand = [...this.hand, ...taken]
-        got += taken.length
-      }
-
-      const classPool = Object.values(CARD_POOL).filter((c) =>
-        c.classes.includes(this.classId),
-      )
-      const minted = []
-      while (got < need && this.hand.length + minted.length < HAND_SIZE && classPool.length) {
-        const tpl = pickWeighted(classPool)
-        const card = createCardInstance(tpl.id, 1)
-        this.deck.push(card)
-        minted.push(card)
-        got += 1
-      }
-      if (minted.length) {
-        this.hand = [...this.hand, ...minted]
-      }
-
-      if (got > 0) {
-        this.pushLog(`回合补给：获得 ${got} 张一星牌（手牌 ${this.hand.length}/${HAND_SIZE}）。`)
-      } else if (need > 0) {
-        this.pushLog('本回合未能获得新牌。')
-      }
-      return got
     },
 
     playCard(uid) {
@@ -520,7 +500,11 @@ export const useGameStore = defineStore('game', {
         return
       }
 
-      if (this.pendingCardUid === uid) return
+      // 再次点击同一张已选中的牌 → 取消选中
+      if (this.pendingCardUid === uid) {
+        this.cancelTargeting()
+        return
+      }
       this.pendingCardUid = uid
       this.selectedTargetIds = []
       this.pushLog(`选择 ${Math.min(need, living.length)} 个目标（「${card.name}」）`)
@@ -815,10 +799,9 @@ export const useGameStore = defineStore('game', {
       const extra = Math.max(0, this.enemies.length - 1) * 10
       const reward = 18 + this.floor * 6 + (anyElite ? 20 : 0) + (anyBoss ? 50 : 0) + extra
       this.gold += reward
-      this.hand = []
-      this.drawPile = []
-      this.discard = []
       this.clearTargeting()
+      // 保留并收回手牌，供层间休整展示，并带入下一层
+      this.gatherHandAfterCombat()
       if (!this.shopLocked) {
         this.shop = []
       }
@@ -912,6 +895,42 @@ export const useGameStore = defineStore('game', {
       this.enterFloor()
     },
 
+    /**
+     * 获得某张牌后的自动合成：只处理该 cardId 的指定星级，
+     * 同一星级可连续合成多次（例如 6 张★ → 两次合成），但不会升星后再连锁。
+     */
+    mergeAfterGain(cardId, star) {
+      const targetStar = Math.floor(Number(star)) || 1
+      if (!cardId || targetStar < 1 || targetStar >= MAX_STAR) return false
+      let merged = false
+      let guard = 0
+      while (guard++ < 20) {
+        if (!this.tryAutoMerge(cardId, targetStar)) break
+        merged = true
+      }
+      return merged
+    },
+
+    /**
+     * 自动合成一波：只处理当前最低可合成星级，
+     * 避免 3×★ → ★★ 后立刻再合成 ★★★。
+     */
+    mergeAllPossible() {
+      this.deck = dedupeByUid(this.deck)
+      const ready = this.mergeGroups
+      if (!ready.length) return false
+      const waveStar = Math.min(...ready.map((g) => g.star))
+      let merged = false
+      let guard = 0
+      while (guard++ < 40) {
+        const groups = this.mergeGroups.filter((g) => g.star === waveStar)
+        if (!groups.length) break
+        if (!this.tryAutoMerge(groups[0].cardId, groups[0].star)) break
+        merged = true
+      }
+      return merged
+    },
+
     /** 将三张同名同星合成一张更高星；单次只升 1 星，不连锁 */
     tryAutoMerge(cardId, star) {
       const targetStar = Math.floor(Number(star)) || 1
@@ -930,6 +949,14 @@ export const useGameStore = defineStore('game', {
       }
       if (matches.length < MERGE_COUNT) return false
 
+      // 优先消耗抽牌堆/弃牌堆中的同名牌，尽量少动当前手牌
+      const zoneOf = (uid) => {
+        if (this.hand.some((c) => c.uid === uid)) return 2
+        if (this.discard.some((c) => c.uid === uid)) return 1
+        return 0 // drawPile 或仅在卡组
+      }
+      matches.sort((a, b) => zoneOf(a.uid) - zoneOf(b.uid))
+
       const remove = matches.slice(0, MERGE_COUNT)
       const removeUids = new Set(remove.map((c) => c.uid))
       this.deck = this.deck.filter((c) => !removeUids.has(c.uid))
@@ -940,9 +967,7 @@ export const useGameStore = defineStore('game', {
       const nextStar = targetStar + 1
       const upgraded = createCardInstance(cardId, nextStar)
       this.deck.push(upgraded)
-      if (this.phase === 'combat' && this.hand.length < HAND_SIZE) {
-        this.hand.push(upgraded)
-      }
+      this.placeInCombat(upgraded)
 
       const label = `${'★'.repeat(nextStar)}${upgraded.name}`
       const ult = CARD_POOL[cardId]?.ultimate
@@ -954,27 +979,6 @@ export const useGameStore = defineStore('game', {
         this.showMergeToast(`合成成功：${label}`)
       }
       return true
-    },
-
-    /**
-     * 自动合成：同一波只处理「当前最低可合成星级」，
-     * 避免 3×★ → ★★ 后立刻又把 ★★ 合成成 ★★★
-     */
-    mergeAllPossible() {
-      this.deck = dedupeByUid(this.deck)
-      const ready = this.mergeGroups
-      if (!ready.length) return false
-
-      const waveStar = Math.min(...ready.map((g) => g.star))
-      let guard = 0
-      let merged = false
-      while (guard++ < 40) {
-        const groups = this.mergeGroups.filter((g) => g.star === waveStar)
-        if (!groups.length) break
-        if (!this.tryAutoMerge(groups[0].cardId, groups[0].star)) break
-        merged = true
-      }
-      return merged
     },
 
     manualMerge(cardId, star) {
