@@ -11,6 +11,7 @@ import {
   RARITY_WEIGHT,
   SHOP_SIZE,
   TURN_START_STAR1_CARDS,
+  FLOOR1_START_STAR1_CARDS,
   getCardTargetCount,
   scaleStats,
 } from '@/data/gameData'
@@ -33,6 +34,8 @@ const MULTI_LABELS = ['甲', '乙', '丙', '丁']
 /** 不挂到 Pinia store 上，避免 storeToRefs 读 null.effect */
 let activeTargets = null
 let toastTimer = null
+/** 下一回合发放一星牌数量；null 表示用默认 TURN_START_STAR1_CARDS */
+let pendingStar1DrawCount = null
 
 function shuffle(arr) {
   const a = [...arr]
@@ -46,7 +49,8 @@ function shuffle(arr) {
 function createCardInstance(cardId, star = 1) {
   const tpl = CARD_POOL[cardId]
   if (!tpl) throw new Error(`Unknown card ${cardId}`)
-  const safeStar = Math.min(Math.max(1, Number(star) || 1), MAX_STAR)
+  // 必须用数字星级，避免 "1"+1 === "11" 被 clamp 成 3 星
+  const safeStar = Math.min(Math.max(1, Math.floor(Number(star)) || 1), MAX_STAR)
   return {
     uid: nextId(),
     cardId,
@@ -296,6 +300,9 @@ export const useGameStore = defineStore('game', {
       } else {
         this.refreshShop()
       }
+      // 第 1 层开局发 5 张一星；其后每回合仍发 2 张
+      pendingStar1DrawCount =
+        this.floor === 1 ? FLOOR1_START_STAR1_CARDS : TURN_START_STAR1_CARDS
       this.beginTurn()
     },
 
@@ -335,8 +342,10 @@ export const useGameStore = defineStore('game', {
         }
       }
 
-      // 每回合开始：从未打出的手牌之外，再获得 2 张一星牌（不超过手牌上限）
-      this.drawStarOneCards(TURN_START_STAR1_CARDS)
+      // 发放一星牌：第 1 层开局 5 张，其余回合 2 张
+      const drawN = pendingStar1DrawCount ?? TURN_START_STAR1_CARDS
+      pendingStar1DrawCount = null
+      this.drawStarOneCards(drawN)
       this.tickEnemyBurn()
       this.checkCombatEnd()
     },
@@ -863,10 +872,10 @@ export const useGameStore = defineStore('game', {
       this.enterFloor()
     },
 
-    /** 将一张同名同星的三张合成一张更高星；成功返回 true */
+    /** 将三张同名同星合成一张更高星；单次只升 1 星，不连锁 */
     tryAutoMerge(cardId, star) {
-      const targetStar = Number(star) || 1
-      if (targetStar >= MAX_STAR) return false
+      const targetStar = Math.floor(Number(star)) || 1
+      if (targetStar < 1 || targetStar >= MAX_STAR) return false
 
       this.deck = dedupeByUid(this.deck)
 
@@ -874,7 +883,7 @@ export const useGameStore = defineStore('game', {
       const seen = new Set()
       for (const c of this.deck) {
         if (!c?.uid || seen.has(c.uid)) continue
-        if (c.cardId === cardId && Number(c.star) === targetStar) {
+        if (c.cardId === cardId && Math.floor(Number(c.star)) === targetStar) {
           seen.add(c.uid)
           matches.push(c)
         }
@@ -888,46 +897,49 @@ export const useGameStore = defineStore('game', {
       this.hand = this.hand.filter((c) => !removeUids.has(c.uid))
       this.discard = this.discard.filter((c) => !removeUids.has(c.uid))
 
-      const upgraded = createCardInstance(cardId, targetStar + 1)
+      const nextStar = targetStar + 1
+      const upgraded = createCardInstance(cardId, nextStar)
       this.deck.push(upgraded)
-      // 战斗中同一引用进手牌，避免拷贝造成双份
       if (this.phase === 'combat' && this.hand.length < HAND_SIZE) {
         this.hand.push(upgraded)
       }
 
-      const label = `${'★'.repeat(targetStar + 1)}${upgraded.name}`
+      const label = `${'★'.repeat(nextStar)}${upgraded.name}`
       const ult = CARD_POOL[cardId]?.ultimate
-      if (targetStar + 1 >= MAX_STAR && ult) {
+      if (nextStar >= MAX_STAR && ult) {
         this.pushLog(`合成成功！${label} 解锁大招「${ult.name}」`)
         this.showMergeToast(`解锁大招：${ult.name}`)
       } else {
         this.pushLog(`合成成功！获得 ${label}`)
         this.showMergeToast(`合成成功：${label}`)
       }
-      // 继续尝试同卡更高星连锁合成
-      this.tryAutoMerge(cardId, targetStar + 1)
       return true
     },
 
-    /** 反复扫描卡组，直到没有可合成组合 */
+    /**
+     * 自动合成：同一波只处理「当前最低可合成星级」，
+     * 避免 3×★ → ★★ 后立刻又把 ★★ 合成成 ★★★
+     */
     mergeAllPossible() {
       this.deck = dedupeByUid(this.deck)
+      const ready = this.mergeGroups
+      if (!ready.length) return false
+
+      const waveStar = Math.min(...ready.map((g) => g.star))
       let guard = 0
       let merged = false
       while (guard++ < 40) {
-        const ready = this.mergeGroups
-        if (!ready.length) break
-        const g = ready[0]
-        if (!this.tryAutoMerge(g.cardId, g.star)) break
+        const groups = this.mergeGroups.filter((g) => g.star === waveStar)
+        if (!groups.length) break
+        if (!this.tryAutoMerge(groups[0].cardId, groups[0].star)) break
         merged = true
       }
       return merged
     },
 
     manualMerge(cardId, star) {
-      const ok = this.tryAutoMerge(cardId, star)
-      if (ok) this.mergeAllPossible()
-      return ok
+      // 手动合成只升一层，不自动连锁
+      return this.tryAutoMerge(cardId, star)
     },
 
     showMergeToast(msg) {

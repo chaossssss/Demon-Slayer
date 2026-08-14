@@ -394,6 +394,8 @@ export const MERGE_COUNT = 3
 export const HAND_SIZE = 10
 /** 每回合开始从牌堆获得的一星卡数量 */
 export const TURN_START_STAR1_CARDS = 2
+/** 第 1 层开局发放的一星卡数量 */
+export const FLOOR1_START_STAR1_CARDS = 5
 export const SHOP_SIZE = 3
 export const FLOORS_TO_WIN = 10
 
