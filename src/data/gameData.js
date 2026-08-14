@@ -391,7 +391,9 @@ export const ENEMY_TEMPLATES = [
 
 export const MAX_STAR = 3
 export const MERGE_COUNT = 3
-export const HAND_SIZE = 5
+export const HAND_SIZE = 10
+/** 每回合开始从牌堆获得的 1 费卡数量 */
+export const TURN_START_COST1_CARDS = 2
 export const SHOP_SIZE = 3
 export const FLOORS_TO_WIN = 10
 

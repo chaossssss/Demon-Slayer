@@ -628,6 +628,602 @@
         </div>
       </section>
 
+      <!-- 08 · HUD 重设计稿 -->
+      <section id="hud-redesign" class="preview-section fade-up">
+        <div class="section-label">
+          08 · HUD 重设计稿 Battle HUD Redesign (V2)
+        </div>
+
+        <!-- 方案 A：顶部横条豪华版 -->
+        <div class="hud-design-title">
+          方案 A · 顶部横条豪华版（推荐）—— 和风纸本 + 鎏金镶边
+        </div>
+        <div class="hud-v2-wrap hud-v2-a">
+          <div class="hud-v2-panel">
+            <div class="hud-v2-corner tl"></div>
+            <div class="hud-v2-corner tr"></div>
+            <div class="hud-v2-corner bl"></div>
+            <div class="hud-v2-corner br"></div>
+
+            <div class="hud-a-row1">
+              <div class="hud-a-identity">
+                <div
+                  class="hud-a-classicon"
+                  style="background: linear-gradient(135deg, #c45c26, #7a3410)"
+                >
+                  <span>剑</span>
+                </div>
+                <div class="hud-a-classtext">
+                  <div class="hud-a-classname" style="color: #c45c26">
+                    剑士 · 破晓斩
+                  </div>
+                  <div class="hud-a-sub">
+                    <span class="floor-chip"
+                      >第 <strong>7</strong> / 10 层</span
+                    >
+                    <span class="hud-a-turn">回合 <strong>3</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hud-a-floorbar">
+                <div class="hud-a-floortrack">
+                  <div
+                    v-for="n in 10"
+                    :key="n"
+                    class="hud-a-floornode"
+                    :class="{
+                      passed: n <= 7,
+                      current: n === 7,
+                      elite: n % 3 === 0,
+                      boss: n === 10,
+                    }"
+                  >
+                    <span>{{ n === 10 ? "王" : n % 3 === 0 ? "精" : n }}</span>
+                    <div v-if="n <= 7" class="hud-a-floordot"></div>
+                  </div>
+                  <div class="hud-a-floorprogress" style="width: 65%"></div>
+                </div>
+              </div>
+
+              <div class="hud-a-relics">
+                <div class="hud-a-relicslot">
+                  <div
+                    class="hud-a-relicicon"
+                    style="
+                      background: linear-gradient(135deg, #c9a227, #8a6a12);
+                    "
+                    title="日轮金御守 · 每回合+2金币"
+                  >
+                    守
+                  </div>
+                </div>
+                <div class="hud-a-relicslot">
+                  <div
+                    class="hud-a-relicicon"
+                    style="
+                      background: linear-gradient(135deg, #9b2d1f, #5a1a10);
+                    "
+                    title="血玉珠 · 攻击牌+2伤害，生命上限-5"
+                  >
+                    珠
+                  </div>
+                </div>
+                <div class="hud-a-relicslot">
+                  <div
+                    class="hud-a-relicicon"
+                    style="
+                      background: linear-gradient(135deg, #3d6b8c, #1f3a5a);
+                    "
+                    title="符咒水引 · 灼烧层数+1"
+                  >
+                    符
+                  </div>
+                </div>
+                <div class="hud-a-relicslot empty" title="空槽位"></div>
+                <div class="hud-a-relicslot empty"></div>
+              </div>
+            </div>
+
+            <div class="hud-a-row2">
+              <div class="hud-a-stat hp-block">
+                <div class="hud-a-stathead">
+                  <span class="hud-a-icohp">❤</span>
+                  <span class="hud-a-statlabel">生命</span>
+                  <span class="hud-a-statval"><strong>52</strong> / 70</span>
+                  <span class="hud-a-blocktag">
+                    <span class="hud-a-icoblock">🛡</span>
+                    <strong>12</strong>
+                    <small>护甲</small>
+                  </span>
+                </div>
+                <div class="hud-a-bars">
+                  <div class="hud-a-bar hp">
+                    <div class="hud-a-fill hp-fill" style="width: 74%"></div>
+                    <div
+                      class="hud-a-blocksegment"
+                      style="left: 74%; width: 14%"
+                    ></div>
+                  </div>
+                </div>
+                <div class="hud-a-barticks">
+                  <span>0</span><span>25%</span><span>50%</span><span>75%</span
+                  ><span>100</span>
+                </div>
+              </div>
+
+              <div class="hud-a-chips">
+                <div class="hud-a-chip gold">
+                  <div class="hud-a-chipico">金</div>
+                  <div class="hud-a-chipval">
+                    <strong>128</strong>
+                    <small>+18/回合</small>
+                  </div>
+                </div>
+                <div class="hud-a-chip energy">
+                  <div class="hud-a-chipico">能</div>
+                  <div class="hud-a-chipval energyval">
+                    <div class="energydots">
+                      <span class="on"></span><span class="on"></span
+                      ><span class="off"></span>
+                    </div>
+                    <small>2 / 3</small>
+                  </div>
+                </div>
+                <div class="hud-a-chip deck">
+                  <div class="hud-a-chipico">牌</div>
+                  <div class="hud-a-chipval">
+                    <strong>24</strong>
+                    <small>卡组</small>
+                  </div>
+                  <div class="deckmini">
+                    <div class="deckpile draw">12<small>抽</small></div>
+                    <div class="deckpile discard">7<small>弃</small></div>
+                  </div>
+                </div>
+                <div class="hud-a-chip thorns">
+                  <div class="hud-a-chipico">反</div>
+                  <div class="hud-a-chipval">
+                    <strong>4</strong>
+                    <small>反伤</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 方案 B：左右分布深色沉浸版 -->
+        <div class="hud-design-title">
+          方案 B · 左右沉浸版（战斗氛围更强）—— 侧挂式神龛风格
+        </div>
+        <div class="hud-v2-wrap hud-v2-b">
+          <div class="hud-b-left">
+            <div class="hud-b-shrine-top">
+              <div class="shrine-deco"></div>
+              <div
+                class="hud-b-classportrait"
+                style="
+                  background: linear-gradient(180deg, #c45c26 0%, #2a1810 100%);
+                "
+              >
+                <span>剑</span>
+              </div>
+              <div class="hud-b-classname" style="color: #c45c26">剑士</div>
+              <div class="hud-b-classtitle">破晓斩</div>
+            </div>
+
+            <div class="hud-b-hpcard">
+              <div class="hud-b-hpnum">
+                <strong>52</strong><span>/ 70</span>
+              </div>
+              <div class="hud-b-hpbar">
+                <div class="hud-b-hpfill" style="width: 74%"></div>
+              </div>
+              <div class="hud-b-blockrow">
+                <span class="hud-b-blockpill">🛡 12 护甲</span>
+                <span class="hud-b-thornspill">🌵 4 反伤</span>
+              </div>
+            </div>
+
+            <div class="hud-b-relics">
+              <div class="hud-b-relictitle">宝物</div>
+              <div class="hud-b-reliclist">
+                <div class="hud-b-relic" title="日轮金御守">
+                  <span
+                    class="b-relic-ico"
+                    style="
+                      background: linear-gradient(135deg, #c9a227, #8a6a12);
+                    "
+                    >守</span
+                  >
+                  <div class="b-relic-name">金御守</div>
+                  <div class="b-relic-desc">每回合+2金</div>
+                </div>
+                <div class="hud-b-relic cursed" title="血玉珠（负面）">
+                  <span
+                    class="b-relic-ico"
+                    style="
+                      background: linear-gradient(135deg, #9b2d1f, #5a1a10);
+                    "
+                    >珠</span
+                  >
+                  <div class="b-relic-name">血玉珠 <em>⚡</em></div>
+                  <div class="b-relic-desc">
+                    <span class="pos">攻+2</span> <span class="neg">HP-5</span>
+                  </div>
+                </div>
+                <div class="hud-b-relic">
+                  <span
+                    class="b-relic-ico"
+                    style="
+                      background: linear-gradient(135deg, #3d6b8c, #1f3a5a);
+                    "
+                    >符</span
+                  >
+                  <div class="b-relic-name">水引符</div>
+                  <div class="b-relic-desc">灼烧+1层</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hud-b-center">
+            <div class="hud-b-floorbanner">
+              <span class="floor-deco-l"></span>
+              <span class="floor-num">第 <em>7</em> 层</span>
+              <span class="floor-sub">· 回合 3 ·</span>
+              <span class="floor-tag elite">精英战</span>
+              <span class="floor-deco-r"></span>
+            </div>
+
+            <div class="hud-b-minifloors">
+              <div
+                v-for="n in 10"
+                :key="'b' + n"
+                class="mf-node"
+                :class="{
+                  passed: n <= 7,
+                  current: n === 7,
+                  elite: n % 3 === 0,
+                  boss: n === 10,
+                }"
+              >
+                <div class="mf-dot"></div>
+                <span>{{ n === 10 ? "BOSS" : n % 3 === 0 ? "精" : n }}</span>
+              </div>
+              <div class="mf-line" style="width: 65%"></div>
+            </div>
+          </div>
+
+          <div class="hud-b-right">
+            <div class="hud-b-statcard goldcard">
+              <div class="statcard-ico">💰</div>
+              <div class="statcard-val">
+                <strong>128</strong>
+                <small>金币 · +18/回合</small>
+              </div>
+            </div>
+            <div class="hud-b-statcard energycard">
+              <div class="statcard-ico">⚡</div>
+              <div class="energy-orbs">
+                <div class="orb on"></div>
+                <div class="orb on"></div>
+                <div class="orb off"></div>
+              </div>
+              <small>2 / 3 能量</small>
+            </div>
+            <div class="hud-b-statcard deckcard">
+              <div class="statcard-ico">🎴</div>
+              <div class="deck-stacked">
+                <div class="stack s1"></div>
+                <div class="stack s2"></div>
+                <div class="stack s3"><span>24</span></div>
+              </div>
+              <div class="deck-detail">
+                <span class="dd">抽 12</span>
+                <span class="dd">弃 7</span>
+                <span class="dd">手 5</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 方案 C：极简紧凑版（小屏/高效） -->
+        <div class="hud-design-title">
+          方案 C · 极简紧凑版（信息密度高，适合多战斗场景）
+        </div>
+        <div class="hud-v2-wrap hud-v2-c">
+          <div class="hud-c-left">
+            <div class="hud-c-classrow" style="border-left: 4px solid #c45c26">
+              <span class="c-mark" style="background: #c45c26">剑</span>
+              <span class="c-name">剑士</span>
+              <span class="c-sub">破晓斩</span>
+              <span class="c-divider">|</span>
+              <span class="c-floor">Lv <b>7</b>/10</span>
+              <span class="c-turn">R<b>3</b></span>
+            </div>
+          </div>
+          <div class="hud-c-center">
+            <div class="hud-c-hp">
+              <span class="hud-c-ico">❤</span>
+              <div class="hud-c-track">
+                <div class="hud-c-fill hp" style="width: 74%"></div>
+                <div
+                  class="hud-c-fill block"
+                  style="width: 14%; left: 74%"
+                ></div>
+              </div>
+              <span class="hud-c-num"><b>52</b>/70</span>
+              <span class="hud-c-blockpill">🛡12</span>
+            </div>
+          </div>
+          <div class="hud-c-right">
+            <div class="hud-c-pill gold">
+              <span>金</span><b>128</b><em>+18</em>
+            </div>
+            <div class="hud-c-pill energy">
+              <span>能</span>
+              <div class="dots-inline">
+                <i class="on"></i><i class="on"></i><i class="off"></i>
+              </div>
+            </div>
+            <div class="hud-c-pill deck"><span>牌</span><b>24</b></div>
+            <div class="hud-c-relicstrip">
+              <span
+                class="rs"
+                title="金御守"
+                style="background: linear-gradient(135deg, #c9a227, #8a6a12)"
+                >守</span
+              >
+              <span
+                class="rs cursed"
+                title="血玉珠"
+                style="background: linear-gradient(135deg, #9b2d1f, #5a1a10)"
+                >珠</span
+              >
+              <span
+                class="rs"
+                title="水引符"
+                style="background: linear-gradient(135deg, #3d6b8c, #1f3a5a)"
+                >符</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- HUD 细节元素放大展示 -->
+        <div class="hud-design-title">HUD 细节元素 · 放大展示</div>
+        <div class="hud-details-grid">
+          <div class="hud-detail-card panel">
+            <h4>10 层进度节点（按层类型着色）</h4>
+            <div class="detail-floor-demo">
+              <div class="mf-node passed">
+                <div class="mf-dot"></div>
+                <span>1</span>
+              </div>
+              <div class="mf-node passed">
+                <div class="mf-dot"></div>
+                <span>2</span>
+              </div>
+              <div class="mf-node passed elite">
+                <div class="mf-dot"></div>
+                <span>精</span>
+              </div>
+              <div class="mf-node passed">
+                <div class="mf-dot"></div>
+                <span>4</span>
+              </div>
+              <div class="mf-node passed">
+                <div class="mf-dot"></div>
+                <span>5</span>
+              </div>
+              <div class="mf-node passed elite">
+                <div class="mf-dot"></div>
+                <span>精</span>
+              </div>
+              <div class="mf-node current">
+                <div class="mf-dot"></div>
+                <span>7</span>
+              </div>
+              <div class="mf-node">
+                <div class="mf-dot"></div>
+                <span>8</span>
+              </div>
+              <div class="mf-node elite">
+                <div class="mf-dot"></div>
+                <span>精</span>
+              </div>
+              <div class="mf-node boss">
+                <div class="mf-dot"></div>
+                <span>BOSS</span>
+              </div>
+              <div class="mf-line" style="width: 65%"></div>
+            </div>
+            <p class="detail-note">普通层·灰 → 精英层·鎏金 → BOSS层·血色脉冲</p>
+          </div>
+
+          <div class="hud-detail-card panel">
+            <h4>宝物槽 · 正/负/空三态（含悬停提示）</h4>
+            <div class="detail-relic-demo">
+              <div class="relic-full pos" title="日轮金御守">
+                <span
+                  class="ri"
+                  style="background: linear-gradient(135deg, #c9a227, #8a6a12)"
+                  >守</span
+                >
+                <div class="relictip">
+                  <div class="rt-name">
+                    日轮金御守 <em class="rarity-gold">稀有</em>
+                  </div>
+                  <div class="rt-line pos">+ 每回合额外获得 2 金币</div>
+                </div>
+              </div>
+              <div class="relic-full mixed" title="血玉珠">
+                <span
+                  class="ri"
+                  style="background: linear-gradient(135deg, #9b2d1f, #5a1a10)"
+                  >珠</span
+                >
+                <span class="mixed-mark">±</span>
+                <div class="relictip">
+                  <div class="rt-name">
+                    血玉珠 <em class="rarity-mixed">双面</em>
+                  </div>
+                  <div class="rt-line pos">+ 所有攻击牌伤害 +2</div>
+                  <div class="rt-line neg">- 生命上限 -5（已生效）</div>
+                </div>
+              </div>
+              <div class="relic-full neg" title="生锈的断刀">
+                <span
+                  class="ri"
+                  style="background: linear-gradient(135deg, #5c6670, #3a3228)"
+                  >断</span
+                >
+                <span class="neg-mark">−</span>
+                <div class="relictip">
+                  <div class="rt-name">
+                    生锈的断刀 <em class="rarity-curse">诅咒</em>
+                  </div>
+                  <div class="rt-line neg">- 每回合 -1 金币</div>
+                  <div class="rt-line pos">+ 卡组上限 +3 张</div>
+                </div>
+              </div>
+              <div class="relic-empty"><span>+</span></div>
+              <div class="relic-empty"><span>+</span></div>
+            </div>
+            <p class="detail-note">
+              普通宝物 · 鎏金框 | 双面宝物 · 血色± | 诅咒 · 暗框 | 空槽 · 虚线
+            </p>
+          </div>
+
+          <div class="hud-detail-card panel">
+            <h4>能量宝珠 · 3/3 全状态</h4>
+            <div class="detail-energy-demo">
+              <div class="energy-orbs big">
+                <div class="orb on"></div>
+                <div class="orb on"></div>
+                <div class="orb on"></div>
+                <small>满能量</small>
+              </div>
+              <div class="energy-orbs big">
+                <div class="orb on"></div>
+                <div class="orb on"></div>
+                <div class="orb off"></div>
+                <small>2/3 能量</small>
+              </div>
+              <div class="energy-orbs big">
+                <div class="orb off"></div>
+                <div class="orb off"></div>
+                <div class="orb off"></div>
+                <small>0/3 能量</small>
+              </div>
+              <div class="energy-orbs big four">
+                <div class="orb on"></div>
+                <div class="orb on"></div>
+                <div class="orb on"></div>
+                <div class="orb off"></div>
+                <small>影刃·4 格</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="hud-detail-card panel">
+            <h4>卡组迷你堆叠 · 抽/弃/手 三堆可视化</h4>
+            <div class="detail-deck-demo">
+              <div class="decktri">
+                <div class="deck-stacked big">
+                  <div class="stack s1"></div>
+                  <div class="stack s2"></div>
+                  <div class="stack s3"><span>24</span></div>
+                </div>
+                <div class="decktri-detail">
+                  <div class="dd-row">
+                    <span class="dd-label draw">抽牌堆</span
+                    ><span class="dd-bar"><i style="width: 80%"></i></span
+                    ><b>12</b>
+                  </div>
+                  <div class="dd-row">
+                    <span class="dd-label hand">手牌</span
+                    ><span class="dd-bar"><i style="width: 33%"></i></span
+                    ><b>5</b>
+                  </div>
+                  <div class="dd-row">
+                    <span class="dd-label discard">弃牌堆</span
+                    ><span class="dd-bar"><i style="width: 47%"></i></span
+                    ><b>7</b>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hud-detail-card panel">
+            <h4>HP + 护甲 双层进度条</h4>
+            <div class="detail-hp-demo">
+              <div class="hpdemo-row">
+                <span class="hpdemo-label">高血量</span>
+                <div class="hud-a-bar demo">
+                  <div class="hud-a-fill hp-fill" style="width: 82%"></div>
+                </div>
+                <span class="hpdemo-val">82/100</span>
+              </div>
+              <div class="hpdemo-row">
+                <span class="hpdemo-label">中血量 + 护甲</span>
+                <div class="hud-a-bar demo">
+                  <div class="hud-a-fill hp-fill" style="width: 52%"></div>
+                  <div
+                    class="hud-a-blocksegment"
+                    style="left: 52%; width: 22%"
+                  ></div>
+                </div>
+                <span class="hpdemo-val">52+22</span>
+              </div>
+              <div class="hpdemo-row danger">
+                <span class="hpdemo-label">危险血量</span>
+                <div class="hud-a-bar demo">
+                  <div
+                    class="hud-a-fill hp-fill danger"
+                    style="width: 18%"
+                  ></div>
+                </div>
+                <span class="hpdemo-val">18/100</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hud-detail-card panel">
+            <h4>状态 / Buff 图标（玩家侧）</h4>
+            <div class="detail-status-demo">
+              <div class="statchip">
+                <span class="sc-ico" style="background: #3d5a6b">🛡</span
+                ><b>12</b><small>护甲</small>
+              </div>
+              <div class="statchip">
+                <span class="sc-ico" style="background: #4a6b3d">🌵</span
+                ><b>4</b><small>反伤</small>
+              </div>
+              <div class="statchip">
+                <span class="sc-ico" style="background: #c9a227">✦</span
+                ><b>+2</b><small>攻击强化</small>
+              </div>
+              <div class="statchip curse">
+                <span class="sc-ico" style="background: #5a3d6b">🌙</span
+                ><b>1</b><small>虚弱</small>
+              </div>
+              <div class="statchip">
+                <span class="sc-ico" style="background: #9b2d1f">❤</span
+                ><b>↑5</b><small>受伤</small>
+              </div>
+              <div class="statchip">
+                <span class="sc-ico" style="background: #3d6b8c">⚡</span
+                ><b>+1</b><small>能量</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <footer class="preview-foot">
         <p>斩鬼录 · Demon Slayer UI 效果图一览 · 主题：和风暗色纸本</p>
       </footer>
@@ -647,6 +1243,7 @@ const sections = [
   { id: "enemies", name: "敌人" },
   { id: "modals", name: "弹窗" },
   { id: "spec", name: "规范" },
+  { id: "hud-redesign", name: "HUD新设计" },
 ];
 const active = ref("home");
 
@@ -2204,6 +2801,1568 @@ onMounted(() => {
   margin-top: 20px;
 }
 
+/* =============== HUD V2 REDESIGN =============== */
+
+.hud-design-title {
+  font-family: var(--font-display);
+  color: var(--paper);
+  font-size: 1rem;
+  letter-spacing: 0.16em;
+  padding: 18px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hud-design-title::before {
+  content: "";
+  width: 32px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blood), var(--gold));
+}
+
+.hud-v2-wrap {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+/* ===== HUD 方案 A：顶部横条豪华版 ===== */
+.hud-v2-a {
+  padding: 0;
+}
+.hud-v2-panel {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    rgba(217, 203, 179, 0.98),
+    rgba(200, 185, 158, 0.96)
+  );
+  border: 2px solid rgba(28, 23, 18, 0.25);
+  box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.25),
+    0 22px 44px rgba(20, 12, 6, 0.45);
+  padding: 16px 22px 18px;
+}
+.hud-v2-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--gold);
+}
+.hud-v2-corner.tl {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.hud-v2-corner.tr {
+  top: -1px;
+  right: -1px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.hud-v2-corner.bl {
+  bottom: -1px;
+  left: -1px;
+  border-right: 0;
+  border-top: 0;
+}
+.hud-v2-corner.br {
+  bottom: -1px;
+  right: -1px;
+  border-left: 0;
+  border-top: 0;
+}
+
+.hud-a-row1 {
+  display: grid;
+  grid-template-columns: 240px 1fr 240px;
+  gap: 22px;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed rgba(28, 23, 18, 0.2);
+}
+
+.hud-a-identity {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.hud-a-classicon {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  position: relative;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+.hud-a-classicon::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+.hud-a-classtext {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hud-a-classname {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+}
+.hud-a-sub {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.floor-chip {
+  padding: 1px 9px;
+  background: rgba(28, 23, 18, 0.08);
+  border: 1px solid rgba(28, 23, 18, 0.15);
+  letter-spacing: 0.06em;
+}
+.floor-chip strong {
+  font-family: var(--font-display);
+  color: var(--blood);
+  font-size: 1rem;
+}
+.hud-a-turn strong {
+  font-family: var(--font-display);
+  color: var(--ink);
+}
+
+.hud-a-floorbar {
+}
+.hud-a-floortrack {
+  position: relative;
+  height: 44px;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  align-items: center;
+  padding: 0 4px;
+}
+.hud-a-floornode {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+  gap: 3px;
+  color: rgba(28, 23, 18, 0.5);
+  font-size: 0.7rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  transition: all 0.3s;
+}
+.hud-a-floornode span {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid rgba(28, 23, 18, 0.25);
+  background: rgba(217, 203, 179, 0.6);
+  border-radius: 50%;
+  font-size: 0.68rem;
+}
+.hud-a-floornode.passed {
+  color: #5a4a2a;
+}
+.hud-a-floornode.passed span {
+  background: linear-gradient(135deg, #8a6a12, #c9a227);
+  color: var(--paper);
+  border-color: var(--gold);
+}
+.hud-a-floornode.current {
+  color: var(--blood);
+  transform: scale(1.1);
+}
+.hud-a-floornode.current span {
+  background: var(--blood);
+  color: var(--paper);
+  border-color: var(--blood);
+  box-shadow: 0 0 0 3px rgba(155, 45, 31, 0.18),
+    0 0 14px rgba(155, 45, 31, 0.45);
+  animation: pulseSoft 1.4s infinite;
+}
+.hud-a-floornode.elite span {
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+  border-radius: 0;
+}
+.hud-a-floornode.boss span {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #3a0f08, var(--blood), #5a1a10);
+  color: var(--paper);
+  border-color: var(--gold);
+  font-weight: 900;
+}
+.hud-a-floorprogress {
+  position: absolute;
+  top: 50%;
+  left: 18px;
+  height: 3px;
+  background: linear-gradient(90deg, #6b4f1f 0%, #c9a227 80%, #c45c26 100%);
+  transform: translateY(-50%);
+  z-index: 1;
+  border-radius: 2px;
+}
+
+.hud-a-relics {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.hud-a-relicslot {
+  width: 44px;
+  height: 44px;
+  background: rgba(28, 23, 18, 0.05);
+  border: 1.5px solid rgba(28, 23, 18, 0.18);
+  display: grid;
+  place-items: center;
+  position: relative;
+  transition: all 0.2s;
+}
+.hud-a-relicslot:not(.empty):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+.hud-a-relicslot.empty {
+  border-style: dashed;
+  color: rgba(28, 23, 18, 0.2);
+}
+.hud-a-relicslot.empty::after {
+  content: "+";
+  font-size: 1.3rem;
+  color: rgba(28, 23, 18, 0.2);
+}
+.hud-a-relicicon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.hud-a-row2 {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 22px;
+  align-items: center;
+}
+
+.hud-a-stat.hp-block {
+}
+.hud-a-stathead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.hud-a-icohp {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #b33524 0%, var(--blood) 100%);
+  color: var(--paper);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 2px rgba(155, 45, 31, 0.18);
+}
+.hud-a-statlabel {
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+  font-size: 1rem;
+  color: var(--ink);
+}
+.hud-a-statval {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+.hud-a-statval strong {
+  font-family: var(--font-display);
+  color: var(--blood);
+  font-size: 1.3rem;
+  margin: 0 2px;
+}
+.hud-a-blocktag {
+  margin-left: 8px;
+  padding: 3px 10px;
+  background: linear-gradient(90deg, #3d5a6b, #2a4a6b);
+  color: var(--paper);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+.hud-a-blocktag strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+.hud-a-blocktag small {
+  opacity: 0.85;
+}
+
+.hud-a-bars {
+}
+.hud-a-bar {
+  position: relative;
+  height: 20px;
+  background: rgba(28, 23, 18, 0.2);
+  border: 1px solid rgba(28, 23, 18, 0.35);
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.hud-a-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  transition: width 0.4s;
+}
+.hud-a-fill.hp-fill {
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.25) 0%,
+      transparent 45%
+    ),
+    linear-gradient(90deg, #5a1a10, var(--blood), #c45c26);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.25);
+}
+.hud-a-fill.hp-fill.danger {
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.2) 0%,
+      transparent 45%
+    ),
+    linear-gradient(90deg, #3a0f08, #7a1f14);
+  animation: pulseSoft 0.9s infinite;
+}
+.hud-a-blocksegment {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.3) 0%,
+      transparent 45%
+    ),
+    repeating-linear-gradient(
+      135deg,
+      #3d5a6b,
+      #3d5a6b 6px,
+      #4a7088 6px,
+      #4a7088 12px
+    );
+  border-left: 2px dashed rgba(255, 255, 255, 0.3);
+}
+.hud-a-barticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: rgba(28, 23, 18, 0.4);
+  margin-top: 3px;
+  padding: 0 2px;
+  font-family: var(--font-display);
+}
+
+.hud-a-chips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.hud-a-chip {
+  position: relative;
+  background: rgba(28, 23, 18, 0.06);
+  border: 1px solid rgba(28, 23, 18, 0.15);
+  padding: 8px 10px 8px 42px;
+  min-height: 46px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.hud-a-chipico {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--paper);
+  font-size: 0.8rem;
+}
+.hud-a-chip.gold .hud-a-chipico {
+  background: linear-gradient(135deg, #8a6a12, var(--gold));
+  color: var(--ink);
+}
+.hud-a-chip.energy .hud-a-chipico {
+  background: linear-gradient(135deg, #1f3a5a, #2a4a6b);
+}
+.hud-a-chip.deck .hud-a-chipico {
+  background: linear-gradient(135deg, #3a2a1a, var(--ink));
+}
+.hud-a-chip.thorns .hud-a-chipico {
+  background: linear-gradient(135deg, #3a5a2a, #4a6b3d);
+}
+
+.hud-a-chipval {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.hud-a-chipval strong {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+.hud-a-chipval small {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+.hud-a-chip.gold .hud-a-chipval strong {
+  color: #8a6a12;
+}
+
+.energydots {
+  display: flex;
+  gap: 4px;
+}
+.energydots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(42, 74, 107, 0.5);
+  background: rgba(42, 74, 107, 0.1);
+}
+.energydots span.on {
+  background: radial-gradient(circle at 30% 30%, #7aa8cf, #2a4a6b);
+  border-color: #2a4a6b;
+  box-shadow: 0 0 6px rgba(42, 74, 107, 0.6);
+}
+
+.deckmini {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 2px;
+}
+.deckpile {
+  width: 20px;
+  height: 26px;
+  background: var(--paper);
+  border: 1px solid rgba(28, 23, 18, 0.35);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.deckpile.draw {
+  background: #e8d9c0;
+  transform: rotate(-6deg);
+}
+.deckpile.discard {
+  background: #c4b396;
+  transform: rotate(6deg);
+}
+.deckpile small {
+  font-size: 0.52rem;
+  opacity: 0.7;
+}
+
+/* ===== HUD 方案 B：左右沉浸版 ===== */
+.hud-v2-b {
+  display: grid;
+  grid-template-columns: 220px 1fr 220px;
+  gap: 14px;
+  min-height: 360px;
+  padding: 14px;
+  background: radial-gradient(
+      ellipse 60% 70% at 50% 40%,
+      rgba(61, 42, 26, 0.6),
+      transparent 70%
+    ),
+    linear-gradient(180deg, rgba(12, 8, 5, 0.35), rgba(12, 8, 5, 0.65));
+  border: 1px solid rgba(217, 203, 179, 0.1);
+}
+
+.hud-b-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(28, 23, 18, 0.55),
+    rgba(28, 23, 18, 0.72)
+  );
+  border: 1px solid rgba(201, 162, 39, 0.25);
+  position: relative;
+}
+.hud-b-left::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 3px;
+  background: var(--gold);
+}
+
+.hud-b-shrine-top {
+  text-align: center;
+  padding: 10px 4px 14px;
+  position: relative;
+  border-bottom: 1px dashed rgba(201, 162, 39, 0.25);
+}
+.shrine-deco {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(
+    90deg,
+    transparent 10%,
+    var(--gold) 30%,
+    var(--gold) 70%,
+    transparent 90%
+  );
+  opacity: 0.6;
+  clip-path: polygon(
+    0 50%,
+    5% 0,
+    25% 0,
+    30% 50%,
+    35% 0,
+    65% 0,
+    70% 50%,
+    75% 0,
+    95% 0,
+    100% 50%,
+    95% 100%,
+    75% 100%,
+    70% 50%,
+    65% 100%,
+    35% 100%,
+    30% 50%,
+    25% 100%,
+    5% 100%
+  );
+}
+.hud-b-classportrait {
+  width: 82px;
+  height: 82px;
+  margin: 8px auto 8px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 2.4rem;
+  color: var(--paper);
+  border: 3px solid rgba(201, 162, 39, 0.4);
+  box-shadow: 0 0 0 4px rgba(28, 23, 18, 0.9), 0 0 22px rgba(201, 162, 39, 0.2);
+}
+.hud-b-classname {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.25rem;
+  letter-spacing: 0.14em;
+}
+.hud-b-classtitle {
+  color: rgba(217, 203, 179, 0.6);
+  letter-spacing: 0.24em;
+  font-size: 0.82rem;
+  margin-top: 2px;
+}
+
+.hud-b-hpcard {
+  background: rgba(217, 203, 179, 0.08);
+  border: 1px solid rgba(217, 203, 179, 0.15);
+  padding: 10px 12px;
+}
+.hud-b-hpnum {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--paper);
+  font-family: var(--font-display);
+  margin-bottom: 6px;
+}
+.hud-b-hpnum strong {
+  font-size: 1.9rem;
+  color: var(--paper);
+  text-shadow: 0 0 12px rgba(196, 92, 38, 0.35);
+}
+.hud-b-hpnum span {
+  color: rgba(217, 203, 179, 0.5);
+  font-size: 0.95rem;
+}
+
+.hud-b-hpbar {
+  height: 10px;
+  background: rgba(28, 23, 18, 0.6);
+  border: 1px solid rgba(217, 203, 179, 0.15);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.hud-b-hpfill {
+  height: 100%;
+  background: linear-gradient(90deg, #5a1a10, #b33524, #c45c26);
+  box-shadow: 0 0 8px rgba(196, 92, 38, 0.6);
+  position: relative;
+}
+.hud-b-hpfill::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  right: 40%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+}
+.hud-b-blockrow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.hud-b-blockpill,
+.hud-b-thornspill {
+  padding: 2px 8px;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  background: rgba(217, 203, 179, 0.08);
+  border: 1px solid rgba(217, 203, 179, 0.15);
+  color: var(--paper);
+}
+
+.hud-b-relics {
+}
+.hud-b-relictitle {
+  font-family: var(--font-display);
+  color: var(--gold);
+  letter-spacing: 0.16em;
+  font-size: 0.85rem;
+  padding: 6px 0 4px;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.2);
+  margin-bottom: 6px;
+}
+.hud-b-reliclist {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.hud-b-relic {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  padding: 6px 8px;
+  background: rgba(217, 203, 179, 0.05);
+  border: 1px solid rgba(217, 203, 179, 0.1);
+  align-items: center;
+}
+.b-relic-ico {
+  grid-row: 1 / span 2;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.b-relic-name {
+  color: var(--paper);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.b-relic-name em {
+  color: var(--blood);
+  font-style: normal;
+  font-size: 0.75rem;
+}
+.hud-b-relic.cursed .b-relic-name {
+  color: #e89a8a;
+}
+.b-relic-desc {
+  color: rgba(217, 203, 179, 0.6);
+  font-size: 0.72rem;
+}
+.b-relic-desc .pos {
+  color: #6aa27a;
+}
+.b-relic-desc .neg {
+  color: #e89a8a;
+}
+
+.hud-b-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 14px;
+}
+.hud-b-floorbanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  background: linear-gradient(
+    180deg,
+    rgba(217, 203, 179, 0.12),
+    rgba(217, 203, 179, 0.05)
+  );
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  position: relative;
+  color: var(--paper);
+}
+.floor-deco-l,
+.floor-deco-r {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, var(--gold), transparent);
+  opacity: 0.5;
+}
+.floor-deco-l {
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+.floor-deco-r {
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+  background: linear-gradient(225deg, var(--gold), transparent);
+}
+.floor-num {
+  font-family: var(--font-display);
+  letter-spacing: 0.18em;
+  font-size: 1.1rem;
+}
+.floor-num em {
+  font-style: normal;
+  color: var(--blood);
+  font-size: 1.6rem;
+  font-weight: 900;
+  margin: 0 2px;
+}
+.floor-sub {
+  color: rgba(217, 203, 179, 0.6);
+  letter-spacing: 0.1em;
+}
+.floor-tag {
+  padding: 3px 10px;
+  font-family: var(--font-display);
+  letter-spacing: 0.12em;
+  font-size: 0.82rem;
+  background: var(--gold);
+  color: var(--ink);
+}
+.floor-tag.elite {
+  background: linear-gradient(90deg, #6b4f1f, var(--gold));
+  color: var(--paper);
+}
+
+.hud-b-minifloors {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  background: rgba(28, 23, 18, 0.4);
+  border: 1px solid rgba(217, 203, 179, 0.08);
+}
+.hud-b-minifloors .mf-line {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  height: 2px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, #6b4f1f, var(--gold));
+  z-index: 1;
+}
+.mf-node {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 36px;
+  color: rgba(217, 203, 179, 0.4);
+  font-size: 0.65rem;
+  font-family: var(--font-display);
+}
+.mf-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(217, 203, 179, 0.15);
+  border: 1.5px solid rgba(217, 203, 179, 0.3);
+}
+.mf-node.passed {
+  color: var(--gold);
+}
+.mf-node.passed .mf-dot {
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 6px rgba(201, 162, 39, 0.5);
+}
+.mf-node.current {
+  color: var(--paper);
+  transform: scale(1.15);
+}
+.mf-node.current .mf-dot {
+  width: 14px;
+  height: 14px;
+  background: var(--blood);
+  border-color: var(--paper);
+  box-shadow: 0 0 0 2px var(--blood), 0 0 14px rgba(155, 45, 31, 0.7);
+}
+.mf-node.elite span {
+  color: #e8c56a;
+}
+.mf-node.boss .mf-dot {
+  border-color: var(--blood);
+  background: linear-gradient(135deg, var(--blood), #3a0f08);
+}
+.mf-node.boss span {
+  color: var(--blood);
+  font-weight: 700;
+}
+
+.hud-b-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.hud-b-statcard {
+  background: linear-gradient(
+    135deg,
+    rgba(217, 203, 179, 0.1),
+    rgba(217, 203, 179, 0.03)
+  );
+  border: 1px solid rgba(217, 203, 179, 0.15);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.hud-b-statcard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+.hud-b-statcard.goldcard::before {
+  background: var(--gold);
+}
+.hud-b-statcard.energycard::before {
+  background: #2a4a6b;
+}
+.hud-b-statcard.deckcard::before {
+  background: var(--ink-soft);
+}
+
+.statcard-ico {
+  font-size: 1.5rem;
+}
+.statcard-val {
+  display: flex;
+  flex-direction: column;
+}
+.statcard-val strong {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--paper);
+}
+.statcard-val small {
+  color: rgba(217, 203, 179, 0.6);
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+}
+.goldcard .statcard-val strong {
+  color: var(--gold);
+}
+
+.energy-orbs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: 1;
+}
+.energy-orbs small {
+  color: rgba(217, 203, 179, 0.6);
+  margin-left: 4px;
+}
+.orb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(28, 23, 18, 0.6);
+  border: 2px solid rgba(42, 74, 107, 0.4);
+  position: relative;
+}
+.orb.on {
+  background: radial-gradient(
+    circle at 30% 28%,
+    #ffffff 0%,
+    #b3d4ee 18%,
+    #3d7cb8 55%,
+    #1f3a5a 100%
+  );
+  border-color: #7aa8cf;
+  box-shadow: 0 0 10px rgba(122, 168, 207, 0.65),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+}
+.energy-orbs.big {
+  gap: 10px;
+}
+.energy-orbs.big .orb {
+  width: 28px;
+  height: 28px;
+}
+.energy-orbs.big.four .orb {
+  width: 24px;
+  height: 24px;
+}
+
+.hud-b-statcard.energycard {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.hud-b-statcard.energycard small {
+  margin: 0;
+}
+
+.deck-stacked {
+  position: relative;
+  width: 42px;
+  height: 52px;
+  flex-shrink: 0;
+}
+.deck-stacked .stack {
+  position: absolute;
+  width: 36px;
+  height: 48px;
+  background: linear-gradient(165deg, #c4b396, #8a7858);
+  border: 1.5px solid rgba(28, 23, 18, 0.6);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.deck-stacked .stack.s1 {
+  top: 0;
+  left: 0;
+  transform: rotate(-7deg);
+}
+.deck-stacked .stack.s2 {
+  top: 2px;
+  left: 3px;
+  transform: rotate(-3deg);
+}
+.deck-stacked .stack.s3 {
+  top: 4px;
+  left: 6px;
+  background: linear-gradient(165deg, #d9cbb3, #a89676);
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.05rem;
+}
+.deck-stacked.big {
+  width: 58px;
+  height: 72px;
+  transform: scale(1.1);
+}
+.deck-stacked.big .stack {
+  width: 50px;
+  height: 66px;
+}
+.deck-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.dd {
+  font-size: 0.76rem;
+  color: rgba(217, 203, 179, 0.65);
+  letter-spacing: 0.04em;
+}
+
+/* ===== HUD 方案 C：极简紧凑版 ===== */
+.hud-v2-c {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 10px 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(217, 203, 179, 0.96),
+    rgba(200, 185, 158, 0.94)
+  );
+  border: 1px solid rgba(28, 23, 18, 0.2);
+  box-shadow: 0 14px 28px rgba(20, 12, 6, 0.4);
+}
+.hud-c-left {
+}
+.hud-c-classrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+.c-mark {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+}
+.c-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  font-size: 1.05rem;
+}
+.c-sub {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+}
+.c-divider {
+  color: rgba(28, 23, 18, 0.3);
+}
+.c-floor b,
+.c-turn b {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--blood);
+}
+.c-turn {
+  color: var(--ink-soft);
+}
+
+.hud-c-center {
+}
+.hud-c-hp {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+}
+.hud-c-ico {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--blood);
+  color: var(--paper);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+}
+.hud-c-track {
+  position: relative;
+  height: 14px;
+  background: rgba(28, 23, 18, 0.2);
+  border: 1px solid rgba(28, 23, 18, 0.3);
+  overflow: hidden;
+}
+.hud-c-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+.hud-c-fill.hp {
+  left: 0;
+  background: linear-gradient(90deg, #5a1a10, #b33524);
+}
+.hud-c-fill.block {
+  left: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    #3d5a6b,
+    #3d5a6b 5px,
+    #4a7088 5px,
+    #4a7088 10px
+  );
+}
+.hud-c-num {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.hud-c-num b {
+  font-family: var(--font-display);
+  color: var(--blood);
+  font-size: 1.1rem;
+}
+.hud-c-blockpill {
+  padding: 2px 8px;
+  background: #3d5a6b;
+  color: var(--paper);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.hud-c-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hud-c-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  background: rgba(28, 23, 18, 0.06);
+  border: 1px solid rgba(28, 23, 18, 0.15);
+  font-size: 0.85rem;
+}
+.hud-c-pill span {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: var(--paper);
+}
+.hud-c-pill.gold span {
+  background: var(--gold);
+  color: var(--ink);
+}
+.hud-c-pill.energy span {
+  background: #2a4a6b;
+}
+.hud-c-pill.deck span {
+  background: var(--ink);
+}
+.hud-c-pill b {
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+.hud-c-pill.gold b {
+  color: #8a6a12;
+}
+.hud-c-pill em {
+  font-style: normal;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+.dots-inline {
+  display: flex;
+  gap: 3px;
+}
+.dots-inline i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: block;
+  background: rgba(42, 74, 107, 0.15);
+  border: 1.5px solid rgba(42, 74, 107, 0.4);
+}
+.dots-inline i.on {
+  background: radial-gradient(circle at 30% 30%, #7aa8cf, #2a4a6b);
+  border-color: #2a4a6b;
+}
+
+.hud-c-relicstrip {
+  display: flex;
+  gap: 4px;
+}
+.rs {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.72rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+}
+.rs.cursed {
+  border-color: var(--blood);
+}
+
+/* ===== HUD Details grid ===== */
+.hud-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 4px;
+}
+.hud-detail-card {
+  padding: 18px 20px;
+}
+.hud-detail-card h4 {
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  font-size: 0.95rem;
+  color: var(--ink);
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+.detail-note {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.05em;
+}
+
+.detail-floor-demo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 10px;
+  background: rgba(28, 23, 18, 0.06);
+  border: 1px solid var(--line);
+}
+.detail-floor-demo .mf-line {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  height: 2px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, #6b4f1f, var(--gold));
+}
+.detail-floor-demo .mf-node {
+  width: 32px;
+}
+
+.detail-relic-demo {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 8px;
+  background: rgba(28, 23, 18, 0.05);
+  border: 1px solid var(--line);
+}
+.relic-full,
+.relic-empty {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid rgba(28, 23, 18, 0.25);
+  background: rgba(28, 23, 18, 0.04);
+}
+.relic-full .ri {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.relic-full.pos {
+  border-color: rgba(201, 162, 39, 0.5);
+}
+.relic-full.mixed {
+  border-color: var(--blood);
+  box-shadow: inset 0 0 0 2px rgba(201, 162, 39, 0.25);
+}
+.relic-full.neg {
+  border-color: #5c6670;
+  opacity: 0.92;
+}
+.mixed-mark,
+.neg-mark {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 0.7rem;
+  color: var(--paper);
+}
+.mixed-mark {
+  background: var(--blood);
+}
+.neg-mark {
+  background: #5c6670;
+}
+.relic-empty {
+  border-style: dashed;
+  color: rgba(28, 23, 18, 0.3);
+  font-size: 1.4rem;
+}
+.relictip {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 8px 10px;
+  min-width: 180px;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+  font-size: 0.8rem;
+}
+.relic-full:hover .relictip {
+  opacity: 1;
+}
+.rt-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed rgba(217, 203, 179, 0.2);
+}
+.rt-name em {
+  font-style: normal;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+}
+.rarity-gold {
+  background: var(--gold);
+  color: var(--ink);
+}
+.rarity-mixed {
+  background: var(--blood);
+  color: var(--paper);
+}
+.rarity-curse {
+  background: #3a3228;
+  color: rgba(217, 203, 179, 0.7);
+}
+.rt-line {
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+.rt-line.pos::before {
+  content: "▲";
+  color: #6aa27a;
+  font-size: 0.65rem;
+  margin-top: 3px;
+}
+.rt-line.neg::before {
+  content: "▼";
+  color: var(--blood);
+  font-size: 0.65rem;
+  margin-top: 3px;
+}
+.rt-line.pos {
+  color: #aed8bd;
+}
+.rt-line.neg {
+  color: #e89a8a;
+}
+
+.detail-energy-demo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.detail-energy-demo .energy-orbs {
+  flex-direction: column;
+  padding: 12px 8px;
+  background: rgba(28, 23, 18, 0.06);
+  border: 1px solid var(--line);
+  gap: 8px;
+}
+
+.detail-deck-demo {
+  padding: 6px;
+}
+.decktri {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.decktri-detail {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dd-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 32px;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.82rem;
+}
+.dd-label {
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  font-size: 0.82rem;
+}
+.dd-label.draw {
+  color: #3d5a6b;
+}
+.dd-label.hand {
+  color: var(--blood);
+}
+.dd-label.discard {
+  color: var(--ink-soft);
+}
+.dd-bar {
+  display: block;
+  height: 10px;
+  background: rgba(28, 23, 18, 0.12);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.dd-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--ink-soft), var(--ink));
+}
+.dd-label.draw + .dd-bar i {
+  background: linear-gradient(90deg, #3d5a6b, #2a4a6b);
+}
+.dd-label.hand + .dd-bar i {
+  background: linear-gradient(90deg, var(--blood), #c45c26);
+}
+.dd-row b {
+  font-family: var(--font-display);
+  text-align: right;
+}
+
+.detail-hp-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.hpdemo-row {
+  display: grid;
+  grid-template-columns: 88px 1fr 64px;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.85rem;
+}
+.hpdemo-label {
+  font-family: var(--font-display);
+  letter-spacing: 0.05em;
+}
+.hpdemo-row.danger .hpdemo-label {
+  color: var(--blood);
+}
+.hud-a-bar.demo {
+  height: 16px;
+}
+.hpdemo-val {
+  font-family: var(--font-display);
+  text-align: right;
+}
+
+.detail-status-demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.statchip {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 7px;
+  padding: 6px 10px 6px 6px;
+  background: rgba(28, 23, 18, 0.05);
+  border: 1px solid var(--line);
+  align-items: center;
+  min-width: 88px;
+}
+.sc-ico {
+  grid-row: 1 / span 2;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  color: var(--paper);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  font-size: 0.9rem;
+}
+.statchip b {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.statchip small {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+.statchip.curse {
+  border-color: rgba(90, 61, 107, 0.35);
+  background: rgba(90, 61, 107, 0.06);
+}
+
+@media (max-width: 1280px) {
+  .hud-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 @media (max-width: 1100px) {
   .home-mock {
     grid-template-columns: 1fr;
@@ -2221,6 +4380,43 @@ onMounted(() => {
     grid-template-columns: 1fr;
   }
   .spec-grid {
+    grid-template-columns: 1fr;
+  }
+  .hud-a-row1 {
+    grid-template-columns: 200px 1fr 200px;
+  }
+  .hud-a-chips {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hud-v2-b {
+    grid-template-columns: 1fr;
+  }
+  .hud-v2-c {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+@media (max-width: 640px) {
+  .grid-mock {
+    grid-template-columns: 1fr;
+  }
+  .enemies-mock {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hud-mock {
+    grid-template-columns: 1fr;
+  }
+  .resources {
+    justify-content: flex-start;
+  }
+  .nav-links {
+    display: none;
+  }
+  .hud-a-row1,
+  .hud-a-row2 {
+    grid-template-columns: 1fr;
+  }
+  .hud-details-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -10,6 +10,7 @@ import {
   MULTI_ENEMY_FLOORS,
   RARITY_WEIGHT,
   SHOP_SIZE,
+  TURN_START_COST1_CARDS,
   getCardTargetCount,
   scaleStats,
 } from '@/data/gameData'
@@ -286,6 +287,11 @@ export const useGameStore = defineStore('game', {
       this.phase = 'combat'
       const names = this.enemies.map((e) => e.name).join('、')
       this.pushLog(`—— 第 ${this.floor} 层：遭遇 ${names} ——`)
+      if (this.shopLocked) {
+        this.pushLog('市集已锁定，保留当前货架。')
+      } else {
+        this.refreshShop()
+      }
       this.beginTurn()
     },
 
@@ -325,12 +331,8 @@ export const useGameStore = defineStore('game', {
         }
       }
 
-      if (this.shopLocked) {
-        this.pushLog('市集已锁定，本回合保留货架。')
-      } else {
-        this.refreshShop()
-      }
-      this.drawCards(HAND_SIZE)
+      // 每回合开始：从未打出的手牌之外，再获得 2 张 1 费牌（不超过手牌上限）
+      this.drawCostOneCards(TURN_START_COST1_CARDS)
       this.tickEnemyBurn()
       this.checkCombatEnd()
     },
@@ -367,7 +369,7 @@ export const useGameStore = defineStore('game', {
       const card = createCardInstance(offer.cardId, 1)
       this.deck.push(card)
       // 战斗中：同一引用进手牌（不要 {...card} 拷贝，否则会同 uid 双份）
-      if (this.phase === 'combat') {
+      if (this.phase === 'combat' && this.hand.length < HAND_SIZE) {
         this.hand.push(card)
       }
       this.shop = this.shop.filter((o) => o.offerId !== offerId)
@@ -389,11 +391,12 @@ export const useGameStore = defineStore('game', {
     toggleShopLock() {
       if (this.phase === 'victory' || this.phase === 'defeat') return
       this.shopLocked = !this.shopLocked
-      this.pushLog(this.shopLocked ? '市集已锁定，结束回合不再刷新。' : '市集已解锁，将按回合刷新。')
+      this.pushLog(this.shopLocked ? '市集已锁定，过关休整不会刷新货架。' : '市集已解锁，过关后将刷新货架。')
     },
 
     drawCards(n) {
       for (let i = 0; i < n; i++) {
+        if (this.hand.length >= HAND_SIZE) break
         if (!this.drawPile.length) {
           if (!this.discard.length) break
           this.drawPile = shuffle(this.discard)
@@ -402,6 +405,36 @@ export const useGameStore = defineStore('game', {
         const card = this.drawPile.shift()
         if (card) this.hand.push(card)
       }
+    },
+
+    /** 从抽牌/弃牌中取出至多 n 张费用为 1 的牌进手牌 */
+    drawCostOneCards(n) {
+      const room = Math.max(0, HAND_SIZE - this.hand.length)
+      const need = Math.min(n, room)
+      if (need <= 0) return 0
+
+      const cost1 = []
+      const otherDraw = []
+      for (const c of this.drawPile) {
+        if (c.cost === 1) cost1.push(c)
+        else otherDraw.push(c)
+      }
+      const otherDiscard = []
+      for (const c of this.discard) {
+        if (c.cost === 1) cost1.push(c)
+        else otherDiscard.push(c)
+      }
+
+      const shuffled = shuffle(cost1)
+      const taken = shuffled.slice(0, need)
+      const remain = shuffled.slice(need)
+      this.drawPile = shuffle([...otherDraw, ...remain])
+      this.discard = otherDiscard
+      this.hand.push(...taken)
+      if (taken.length) {
+        this.pushLog(`获得 ${taken.length} 张 1 费牌。`)
+      }
+      return taken.length
     },
 
     playCard(uid) {
@@ -417,7 +450,7 @@ export const useGameStore = defineStore('game', {
 
       const tpl = CARD_POOL[card.cardId]
       const need = getCardTargetCount(tpl)
-      const living = this.livingEnemies
+      const living = this.enemies.filter((e) => e.hp > 0)
 
       if (need <= 0) {
         this.commitPlay(card, [])
@@ -429,28 +462,24 @@ export const useGameStore = defineStore('game', {
         return
       }
 
-      // 存活敌人数不超过需求：自动全选并打出
-      if (living.length <= need) {
-        this.commitPlay(
-          card,
-          living.map((e) => e.uid),
-        )
+      // 仅剩 1 只时自动锁定；多只时一律点选（避免误把全体当成目标）
+      if (living.length === 1) {
+        this.commitPlay(card, [living[0].uid])
         return
       }
 
-      // 进入点选目标模式（尚未扣费/出牌）
       if (this.pendingCardUid === uid) return
       this.pendingCardUid = uid
       this.selectedTargetIds = []
-      this.pushLog(`选择 ${need} 个目标（「${card.name}」）`)
+      this.pushLog(`选择 ${Math.min(need, living.length)} 个目标（「${card.name}」）`)
     },
 
     toggleTarget(enemyUid) {
       if (!this.pendingCardUid || this.phase !== 'combat') return
-      const living = this.livingEnemies
+      const living = this.enemies.filter((e) => e.hp > 0)
       if (!living.some((e) => e.uid === enemyUid)) return
 
-      const need = this.targetingNeed
+      const need = Math.min(this.targetingNeed, living.length)
       const idx = this.selectedTargetIds.indexOf(enemyUid)
       if (idx >= 0) {
         this.selectedTargetIds.splice(idx, 1)
@@ -494,10 +523,18 @@ export const useGameStore = defineStore('game', {
       const idx = this.hand.findIndex((c) => c.uid === card.uid)
       if (idx >= 0) this.hand.splice(idx, 1)
 
-      const idSet = new Set(targetIds)
+      const tpl = CARD_POOL[card.cardId]
+      const need = getCardTargetCount(tpl)
+      // 严格按卡牌目标数截断，防止误伤全体
+      const capped =
+        need > 0 ? [...new Set(targetIds)].slice(0, need) : []
+      const idSet = new Set(capped)
       activeTargets = this.enemies.filter((e) => idSet.has(e.uid) && e.hp > 0)
-      this.resolveCard(card)
-      activeTargets = null
+      try {
+        this.resolveCard(card)
+      } finally {
+        activeTargets = null
+      }
       this.discard.push(card)
       this.checkCombatEnd()
     },
@@ -507,10 +544,11 @@ export const useGameStore = defineStore('game', {
       if (!tpl) return
       const s = scaleStats(tpl.base, card.star)
       const starLabel = '★'.repeat(card.star)
-      const targets = activeTargets || []
-      const aliveBefore = new Set(targets.filter((e) => e.hp > 0).map((e) => e.uid))
+      const targetUids = (activeTargets || []).map((e) => e.uid)
+      const targets = this.enemies.filter((e) => targetUids.includes(e.uid) && e.hp > 0)
+      const aliveBefore = new Set(targets.map((e) => e.uid))
 
-      this.applyCardEffects(s, targets)
+      this.applyCardEffects(s, targetUids)
       this.pushLog(`打出 ${starLabel}${card.name}`)
 
       if (card.star >= MAX_STAR && tpl.ultimate?.effect) {
@@ -520,7 +558,7 @@ export const useGameStore = defineStore('game', {
 
         if (killHeal) {
           const { heal, killHeal: _kh, ...rest } = effect
-          this.applyCardEffects(rest, targets)
+          this.applyCardEffects(rest, targetUids)
           const killed = [...aliveBefore].some((id) => {
             const e = this.enemies.find((x) => x.uid === id)
             return e && e.hp <= 0
@@ -540,7 +578,7 @@ export const useGameStore = defineStore('game', {
             }
           }
         } else {
-          this.applyCardEffects(effect, targets)
+          this.applyCardEffects(effect, targetUids)
         }
 
         this.pushLog(`触发大招「${tpl.ultimate.name}」！`)
@@ -548,7 +586,7 @@ export const useGameStore = defineStore('game', {
       }
     },
 
-    applyCardEffects(s, targets = null) {
+    applyCardEffects(s, targetUids = null) {
       if (!s) return { dealt: 0, killed: false }
       const mods = this.relicMods
       let dealt = 0
@@ -559,19 +597,26 @@ export const useGameStore = defineStore('game', {
       if (s.energy) this.energy += s.energy
       if (s.draw) this.drawCards(s.draw)
 
-      let enemies = targets
-      if (!enemies) {
-        enemies = activeTargets || []
+      let uids = Array.isArray(targetUids) ? targetUids : null
+      if (!uids) {
+        uids = (activeTargets || []).map((e) => e.uid)
       }
       const needsEnemy =
         !!(s.damage || s.burn || s.weaken || s.executeBonus || s.killHeal)
-      if (needsEnemy && (!enemies || !enemies.length)) {
-        enemies = this.livingEnemies.slice(0, 1)
+      if (needsEnemy && !uids.length) {
+        const first = this.enemies.find((e) => e.hp > 0)
+        if (first) uids = [first.uid]
       }
 
-      const aliveBefore = new Set((enemies || []).filter((e) => e.hp > 0).map((e) => e.uid))
+      const aliveBefore = new Set(
+        uids.filter((id) => {
+          const e = this.enemies.find((x) => x.uid === id)
+          return e && e.hp > 0
+        }),
+      )
 
-      for (const enemy of enemies || []) {
+      for (const uid of uids) {
+        const enemy = this.enemies.find((e) => e.uid === uid)
         if (!enemy || enemy.hp <= 0) continue
 
         if (s.weaken) {
@@ -586,7 +631,7 @@ export const useGameStore = defineStore('game', {
         }
         const hits = s.hits || (dmg ? 1 : 0)
         for (let i = 0; i < hits; i++) {
-          dealt += this.dealDamageToEnemy(enemy, dmg, !!s.pierce)
+          dealt += this.dealDamageToEnemy(enemy.uid, dmg, !!s.pierce)
         }
         if (s.burn) {
           enemy.burnStacks += s.burn + (mods.burnFlat || 0)
@@ -623,7 +668,11 @@ export const useGameStore = defineStore('game', {
       return { dealt, killed }
     },
 
-    dealDamageToEnemy(enemy, raw, pierce = false) {
+    dealDamageToEnemy(enemyOrUid, raw, pierce = false) {
+      const enemy =
+        typeof enemyOrUid === 'string'
+          ? this.enemies.find((e) => e.uid === enemyOrUid)
+          : this.enemies.find((e) => e.uid === enemyOrUid?.uid)
       if (!enemy || raw <= 0) return 0
       let dmg = raw
       if (!pierce && enemy.block > 0) {
@@ -648,8 +697,7 @@ export const useGameStore = defineStore('game', {
     endTurn() {
       if (this.phase !== 'combat') return
       this.clearTargeting()
-      this.discard.push(...this.hand)
-      this.hand = []
+      // 未打出的手牌保留到下回合，不弃置
 
       this.enemiesAct()
       if (this.hp <= 0) {
@@ -683,7 +731,7 @@ export const useGameStore = defineStore('game', {
       dmg += this.relicMods.damageTakenFlat || 0
 
       if (this.thorns > 0) {
-        e.hp = Math.max(0, e.hp - this.thorns)
+        this.dealDamageToEnemy(e.uid, this.thorns, true)
         this.pushLog(`反伤对 ${e.name} 造成 ${this.thorns} 点。`)
       }
 
@@ -702,8 +750,11 @@ export const useGameStore = defineStore('game', {
     },
 
     checkCombatEnd() {
+      if (this.phase !== 'combat') return
       if (!this.enemies.length) return
-      if (this.livingEnemies.length > 0) return
+      // 必须从 state 直接数存活，避免误判「死一只 = 全灭」
+      const alive = this.enemies.filter((e) => e.hp > 0)
+      if (alive.length > 0) return
 
       const anyElite = this.enemies.some((e) => e.elite)
       const anyBoss = this.enemies.some((e) => e.boss)
@@ -823,7 +874,7 @@ export const useGameStore = defineStore('game', {
       const upgraded = createCardInstance(cardId, star + 1)
       this.deck.push(upgraded)
       // 战斗中同一引用进手牌，避免拷贝造成双份
-      if (this.phase === 'combat') {
+      if (this.phase === 'combat' && this.hand.length < HAND_SIZE) {
         this.hand.push(upgraded)
       }
 

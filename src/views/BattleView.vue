@@ -21,7 +21,7 @@
       <section class="enemy-zone panel">
         <div v-if="game.phase === 'combat' && game.enemies.length" class="enemy-list">
           <p v-if="game.pendingCardUid" class="target-hint">
-            选择 {{ game.targetingNeed }} 个目标（已选 {{ game.selectedTargetIds.length }}）
+            选择 {{ Math.min(game.targetingNeed, game.livingEnemies.length) }} 个目标（已选 {{ game.selectedTargetIds.length }}）
             <button type="button" class="btn-link" @click="game.cancelTargeting">取消</button>
           </p>
           <div
