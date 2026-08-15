@@ -452,7 +452,12 @@ const restHandStyle = computed(() => handLayoutStyle(restCards.value.length))
 .hand :deep(.card) {
   flex: 0 0 auto;
   margin-left: calc(var(--hand-overlap, 0px) * -1);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, margin 0.18s ease;
+  transition:
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    margin 0.32s ease,
+    border-color 0.28s ease,
+    filter 0.28s ease;
 }
 
 .hand :deep(.card:first-child) {
@@ -461,7 +466,7 @@ const restHandStyle = computed(() => handLayoutStyle(restCards.value.length))
 
 .hand :deep(.card:hover:not(:disabled)),
 .hand :deep(.card.armed) {
-  transform: translateY(-28px) scale(1.04) !important;
+  transform: translateY(-28px) scale(1.05) !important;
   z-index: 40 !important;
 }
 

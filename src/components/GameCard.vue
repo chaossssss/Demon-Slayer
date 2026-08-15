@@ -65,6 +65,7 @@ const typeLabel = computed(() => {
 
 <style scoped>
 .card {
+  --glow: rgba(201, 162, 39, 0.38);
   position: relative;
   width: 148px;
   min-height: 210px;
@@ -77,14 +78,43 @@ const typeLabel = computed(() => {
   border-radius: 4px;
   background: linear-gradient(165deg, #3a2a22 0%, #1f1712 100%);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transform-origin: center bottom;
+  overflow: hidden;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.28s ease,
+    filter 0.28s ease;
   animation: drawIn 0.35s ease both;
 }
 
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 28%,
+    rgba(255, 244, 214, 0.22) 48%,
+    transparent 68%
+  );
+  transform: translateX(-140%);
+  transition: transform 0.55s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card:hover:not(:disabled)::before {
+  transform: translateX(140%);
+}
+
 .card:hover:not(:disabled) {
-  transform: translateY(-10px) scale(1.03);
-  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.45);
+  transform: translateY(-12px) scale(1.045);
+  box-shadow:
+    0 22px 40px rgba(0, 0, 0, 0.5),
+    0 0 22px var(--glow);
   border-color: var(--gold);
+  filter: brightness(1.08);
   z-index: 2;
 }
 
@@ -99,10 +129,12 @@ const typeLabel = computed(() => {
 }
 
 .card.type-attack {
+  --glow: rgba(196, 92, 38, 0.45);
   background: linear-gradient(165deg, #4a241c 0%, #1a1210 100%);
 }
 
 .card.type-skill {
+  --glow: rgba(61, 107, 79, 0.42);
   background: linear-gradient(165deg, #1f3a32 0%, #121816 100%);
 }
 
@@ -111,6 +143,7 @@ const typeLabel = computed(() => {
 }
 
 .card.ultimate {
+  --glow: rgba(201, 162, 39, 0.58);
   width: 158px;
   min-height: 230px;
   border-color: #c9a227;
