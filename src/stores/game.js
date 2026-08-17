@@ -294,17 +294,20 @@ export const useGameStore = defineStore('game', {
       }
 
       if (this.floor === 1) {
-        // 仅开局发一次初始手牌；之后任何回合都不再自动加牌
+        // 仅开局发一次初始手牌（按卡组原有顺序，不打乱）
         this.discard = []
-        this.drawPile = shuffle([...this.deck])
+        this.drawPile = [...this.deck]
         this.hand = this.drawPile.splice(0, Math.min(HAND_SIZE, this.drawPile.length))
         this.pushLog(`开战手牌：${this.hand.length} 张。`)
       } else {
-        // 过层：保留手牌，其余卡组牌进抽牌堆
+        // 过层：按卡组顺序重新上手（上限内），其余进抽牌堆；不洗牌
         this.discard = []
-        this.hand = this.hand.filter((c) => c?.uid && this.deck.some((d) => d.uid === c.uid))
+        const ordered = dedupeByUid(this.deck)
+        this.deck = ordered
+        this.hand = ordered.slice(0, Math.min(HAND_SIZE, ordered.length))
         const handUids = new Set(this.hand.map((c) => c.uid))
-        this.drawPile = shuffle(this.deck.filter((c) => !handUids.has(c.uid)))
+        this.drawPile = ordered.filter((c) => !handUids.has(c.uid))
+        this.pushLog(`开战手牌：${this.hand.length} 张（卡组 ${this.deck.length}）。`)
       }
       this.beginTurn()
     },
@@ -384,42 +387,28 @@ export const useGameStore = defineStore('game', {
      * 把已入卡组的牌放到可接触区域（手牌优先，满则进抽牌堆）。
      * 战斗与休整都适用，避免合成/购买后牌只存在于 deck、界面与下一层手牌都看不到。
      */
+    /**
+     * 休整购入：进卡组即可（展示看卡组）；战斗中才放入手牌/抽牌堆。
+     */
     placeInCombat(card) {
       if (!card?.uid) return
-      if (this.phase !== 'combat' && this.phase !== 'shop') return
+      if (this.phase !== 'combat') return
       const zones = [this.hand, this.drawPile, this.discard]
       if (zones.some((z) => z.some((c) => c.uid === card.uid))) return
       if (this.hand.length < HAND_SIZE) this.hand.push(card)
       else this.drawPile.push(card)
     },
 
-    /** 通关后把手牌外的战斗牌收回，供休整展示并带入下一层 */
+    /**
+     * 通关后清空战斗区牌堆；休整展示与下层上手都以「卡组」为准。
+     * 不把手牌残留当成休整展示内容。
+     */
     gatherHandAfterCombat() {
-      const seen = new Set()
-      const kept = []
-      for (const c of this.hand) {
-        if (!c?.uid || seen.has(c.uid)) continue
-        if (!this.deck.some((d) => d.uid === c.uid)) continue
-        seen.add(c.uid)
-        kept.push(c)
-      }
-      const returning = [...this.drawPile, ...this.discard]
+      this.hand = []
       this.drawPile = []
       this.discard = []
-      for (const c of returning) {
-        if (!c?.uid || seen.has(c.uid)) continue
-        if (!this.deck.some((d) => d.uid === c.uid)) continue
-        seen.add(c.uid)
-        kept.push(c)
-      }
-      for (const c of this.deck) {
-        if (!c?.uid || seen.has(c.uid)) continue
-        seen.add(c.uid)
-        kept.push(c)
-      }
-      this.hand = kept.slice(0, HAND_SIZE)
-      this.drawPile = kept.slice(HAND_SIZE)
-      // 弃牌收回后可能凑满 3 张，按最低星级自动合成一波
+      this.deck = dedupeByUid(this.deck)
+      // 卡组维度凑满 3 张时自动合成一波
       this.mergeAllPossible()
     },
 
@@ -442,7 +431,7 @@ export const useGameStore = defineStore('game', {
 
     rerollShop() {
       if (this.shopLocked) return false
-      const cost = 8 + this.floor
+      const cost = 3 + this.floor
       if (this.gold < cost) return false
       this.gold -= cost
       this.refreshShop()
@@ -959,6 +948,23 @@ export const useGameStore = defineStore('game', {
 
       const remove = matches.slice(0, MERGE_COUNT)
       const removeUids = new Set(remove.map((c) => c.uid))
+
+      // 升星牌插回原位置，避免手牌/卡组顺序乱跳
+      let handInsertAt = -1
+      for (let i = 0; i < this.hand.length; i++) {
+        if (removeUids.has(this.hand[i].uid)) {
+          handInsertAt = i
+          break
+        }
+      }
+      let deckInsertAt = -1
+      for (let i = 0; i < this.deck.length; i++) {
+        if (removeUids.has(this.deck[i].uid)) {
+          deckInsertAt = i
+          break
+        }
+      }
+
       this.deck = this.deck.filter((c) => !removeUids.has(c.uid))
       this.drawPile = this.drawPile.filter((c) => !removeUids.has(c.uid))
       this.hand = this.hand.filter((c) => !removeUids.has(c.uid))
@@ -966,8 +972,16 @@ export const useGameStore = defineStore('game', {
 
       const nextStar = targetStar + 1
       const upgraded = createCardInstance(cardId, nextStar)
-      this.deck.push(upgraded)
-      this.placeInCombat(upgraded)
+      if (deckInsertAt >= 0) {
+        this.deck.splice(Math.min(deckInsertAt, this.deck.length), 0, upgraded)
+      } else {
+        this.deck.push(upgraded)
+      }
+      if (handInsertAt >= 0 && this.phase === 'combat' && this.hand.length < HAND_SIZE) {
+        this.hand.splice(Math.min(handInsertAt, this.hand.length), 0, upgraded)
+      } else {
+        this.placeInCombat(upgraded)
+      }
 
       const label = `${'★'.repeat(nextStar)}${upgraded.name}`
       const ult = CARD_POOL[cardId]?.ultimate

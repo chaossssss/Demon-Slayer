@@ -116,7 +116,7 @@
 
     <section class="hand-dock rest-dock" v-else-if="game.phase === 'shop'">
       <div class="hand-wrap">
-        <p class="hand-count">我的卡组 {{ restCards.length }} 张 · 手牌 {{ game.hand.length }} 张将带入下一层</p>
+        <p class="hand-count">我的卡组 {{ restCards.length }} 张 · 进入下一层将按此上手</p>
         <div class="hand" :style="restHandStyle">
           <GameCard
             v-for="(card, i) in restCards"
@@ -201,7 +201,7 @@ const incomePreview = computed(() => {
   )
 })
 
-const rerollCost = computed(() => 8 + floor.value)
+const rerollCost = computed(() => 3 + floor.value)
 
 function hpPct(e) {
   if (!e?.maxHp) return 0
@@ -227,14 +227,12 @@ const handCards = computed(() =>
   })),
 )
 
-/** 休整展示整副卡组（含手牌中的牌） */
+/** 休整展示整副卡组（购买/合成后立刻可见） */
 const restCards = computed(() =>
-  [...game.deck]
-    .sort((a, b) => b.star - a.star || a.name.localeCompare(b.name, 'zh'))
-    .map((c) => ({
-      ...c,
-      desc: getCardDesc(CARD_POOL[c.cardId], c.star),
-    })),
+  game.deck.map((c) => ({
+    ...c,
+    desc: getCardDesc(CARD_POOL[c.cardId], c.star),
+  })),
 )
 
 function handLayoutStyle(n) {
