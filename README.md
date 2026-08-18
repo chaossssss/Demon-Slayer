@@ -672,10 +672,12 @@ src/
     HomeView.vue
     ClassSelectView.vue
     BattleView.vue
+    BattleArenaView.vue  # 像素战场布局预览 /arena
   components/
     GameCard.vue
     StatusBar.vue
     RelicBar.vue      # 已持有宝物栏
+    PixelActor.vue    # 像素占位角色
     ShopPanel.vue     # 含锁定市集
     MergeModal.vue
     TreasurePick.vue  # 宝物三选一
@@ -719,12 +721,12 @@ src/
 
 ### 待做
 
-- [ ] **布局骨架**：左人右怪占位、顶栏 / 底牌保持；市集改为按钮 + 弹层；战报收到右上角
-- [ ] **怪状态显示**：状态挂在每只怪立绘上（1~3 只各自一份，不要再做成独立面板）。需展示：名称、普通/精英/Boss 徽章、意图（攻击伤害 / 灼烧 / Boss 加强回合）、生命条、护甲、灼烧层数；多目标点选时高亮。削弱目前只改攻击数值（意图数字会变），后续可补独立图标层数
+- [x] **布局骨架**：预览页 `/arena`（`BattleArenaView.vue`）已搭占位：左人右怪、顶栏 / 底牌、市集按钮 + 弹层、战报右上。正式战斗仍走 `/battle`
+- [x] **怪状态显示**：预览页已挂在每只怪立绘上。需展示：名称、普通/精英/Boss 徽章、意图（攻击伤害 / 灼烧 / Boss 加强回合）、生命条、护甲、灼烧层数；多目标点选时高亮。削弱目前只改攻击数值（意图数字会变），后续可补独立图标层数
 - [ ] **市集交互**：战斗中可随时打开；结束回合 → 敌方行动演出 → 新回合刷新货架后 **自动弹出**（锁定市集时可不自动弹）
 - [ ] **行动队列**：出牌 / 敌攻先播动画再结算下一事件，演出期间锁定操作（避免连点叠动画）
 - [ ] **像素素材规格**：角色约 96×96、怪 96~128；每状态 4～8 帧；侧面站桩即可
 - [ ] **动画复用**：不要一张牌一套片。角色/怪状态机（`idle` / `attack` / `cast` / `hurt` / `guard` / `die`）+ 特效标签（`slash` / `fire` / `heal` / `shield` / `smoke`）；三星大招用同一套放大/闪金
 - [ ] **分步落地**：① 占位图改布局 ② 行动队列 ③ 先做剑士 + 小鬼 idle/attack/hurt，再铺其他职业与敌人
 
-相关文件：`src/views/BattleView.vue`、`src/components/ShopPanel.vue`、`src/stores/game.js`。
+相关文件：`src/views/BattleArenaView.vue`（预览）、`src/components/PixelActor.vue`、`src/views/BattleView.vue`、`src/components/ShopPanel.vue`、`src/stores/game.js`。

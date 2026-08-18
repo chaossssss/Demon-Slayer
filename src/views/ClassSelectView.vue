@@ -1,7 +1,10 @@
 <template>
   <main class="view class-select">
     <header class="top fade-up">
-      <RouterLink class="back" to="/">← 返回</RouterLink>
+      <div class="top-nav">
+        <RouterLink class="back" to="/">← 返回</RouterLink>
+        <RouterLink class="back" to="/arena">像素战场预览</RouterLink>
+      </div>
       <h1 class="brand">选择职业</h1>
       <p>最初只有剑士可出征，其余职业随战绩解锁。</p>
     </header>
@@ -106,6 +109,12 @@ function start() {
 
 .top {
   margin-bottom: 18px;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .back {
