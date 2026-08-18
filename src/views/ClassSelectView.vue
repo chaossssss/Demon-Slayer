@@ -32,6 +32,9 @@
             </li>
           </ul>
         </div>
+        <div v-if="selected === cls.id && cls.unlocked" class="select-fx" aria-hidden="true">
+          <span class="select-stamp">选</span>
+        </div>
         <div class="lock" v-if="!cls.unlocked">
           <span class="lock-ico" aria-hidden="true">锁</span>
           <span>{{ cls.unlockHint }}</span>
@@ -146,18 +149,129 @@ function start() {
   box-shadow: none;
   overflow: hidden;
   transition:
-    transform 0.25s ease,
-    border-color 0.25s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.28s ease,
+    box-shadow 0.35s ease,
     filter 0.25s ease;
 }
 
-.class-card:hover:not(:disabled) {
+.class-card:hover:not(:disabled):not(.selected) {
   transform: translateY(-4px);
 }
 
 .class-card.selected {
+  z-index: 2;
   border-color: var(--accent);
-  box-shadow: none;
+  transform: translateY(-10px) scale(1.035);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 85%, #fff 15%),
+    0 18px 36px rgba(12, 8, 5, 0.5),
+    0 0 22px color-mix(in srgb, var(--accent) 60%, transparent),
+    0 0 48px color-mix(in srgb, var(--accent) 32%, transparent);
+  filter: brightness(1.06);
+}
+
+.class-card.selected:hover:not(:disabled) {
+  transform: translateY(-12px) scale(1.04);
+}
+
+.select-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 30%, transparent), transparent 34%),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent) 22%, transparent), transparent 28%);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--accent) 72%, #f0e0b0 28%);
+  animation: selectWash 0.45s ease both;
+}
+
+.select-fx::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 28%,
+    rgba(255, 244, 214, 0.38) 48%,
+    transparent 68%
+  );
+  transform: translateX(-140%);
+  animation: selectSheen 0.7s ease 0.08s both;
+}
+
+.select-fx::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, #f0e0b0);
+  opacity: 0.45;
+  animation: selectRim 2.2s ease-in-out 0.4s infinite;
+}
+
+.select-stamp {
+  position: absolute;
+  top: 3.2%;
+  right: 4.2%;
+  width: 2.15em;
+  height: 2.15em;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  color: #f3e2b0;
+  background: color-mix(in srgb, var(--accent) 78%, #1c120c);
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 1.35vw, 1.15rem);
+  letter-spacing: 0.08em;
+  text-indent: 0.08em;
+  box-shadow:
+    0 0 0 1px rgba(12, 8, 5, 0.35),
+    0 0 14px color-mix(in srgb, var(--accent) 55%, transparent);
+  transform: rotate(14deg) scale(0.4);
+  animation: stampIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+@keyframes selectWash {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes selectSheen {
+  from {
+    transform: translateX(-140%);
+  }
+  to {
+    transform: translateX(140%);
+  }
+}
+
+@keyframes selectRim {
+  0%,
+  100% {
+    opacity: 0.28;
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: inset 0 0 18px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+}
+
+@keyframes stampIn {
+  from {
+    opacity: 0;
+    transform: rotate(14deg) scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(14deg) scale(1);
+  }
 }
 
 .class-card.locked {
