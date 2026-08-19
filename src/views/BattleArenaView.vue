@@ -87,7 +87,8 @@
       <div class="rune" aria-hidden="true" />
 
       <div class="hero-slot" :class="{ busy: locked }">
-        <PixelActor kind="swordsman" :anim="heroAnim" :size="120" />
+        <PixelActor v-show="!skillClip" kind="swordsman" :anim="heroAnim" :size="120" />
+        <SkillClip :clip="skillClip" @ended="onSkillEnded" />
       </div>
 
       <div class="enemy-sprites">
@@ -162,6 +163,7 @@ import RelicBar from '@/components/RelicBar.vue'
 import ShopPanel from '@/components/ShopPanel.vue'
 import GameCard from '@/components/GameCard.vue'
 import PixelActor from '@/components/PixelActor.vue'
+import SkillClip from '@/components/SkillClip.vue'
 import { CARD_POOL, getCardDesc, getCardTargetCount } from '@/data/gameData'
 import { TREASURE_POOL } from '@/data/treasures'
 
@@ -182,6 +184,8 @@ const logCollapsed = ref(true)
 const pendingUid = ref(null)
 const selectedIds = ref([])
 const heroAnim = ref('idle')
+const skillClip = ref(null)
+let skillDone = null
 let logSeq = 1
 const log = ref([
   { id: logSeq++, msg: '第 3 层 · 小鬼与血犬拦路。' },
@@ -327,6 +331,27 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function onSkillEnded() {
+  skillClip.value = null
+  skillDone?.()
+  skillDone = null
+}
+
+async function playSkillClip(card) {
+  await new Promise((resolve) => {
+    skillDone = resolve
+    skillClip.value = {
+      classId: 'swordsman',
+      cardId: card.cardId,
+      star: card.star || 1,
+      nonce: Date.now(),
+    }
+    setTimeout(() => {
+      if (skillDone === resolve) onSkillEnded()
+    }, 5000)
+  })
+}
+
 function playCard(card) {
   if (!canPlay(card)) return
   const tpl = CARD_POOL[card.cardId]
@@ -363,7 +388,7 @@ async function resolvePlay(card, targetIds) {
   const tpl = CARD_POOL[card.cardId]
   const isAttack = tpl.type === 'attack' || tpl.base?.damage || tpl.base?.burn
   heroAnim.value = isAttack ? 'attack' : tpl.base?.block ? 'guard' : 'cast'
-  await wait(280)
+  await playSkillClip(card)
 
   const targets = enemies.value.filter((e) => targetIds.includes(e.uid) && e.hp > 0)
   for (const e of targets) {
@@ -726,6 +751,9 @@ function rerollShop() {
   position: absolute;
   left: 320px;
   bottom: 28px;
+  width: 120px;
+  height: 120px;
+  overflow: visible;
 }
 
 .enemy-sprites {
