@@ -4,10 +4,15 @@ export const CLASSES = {
     id: 'swordsman',
     name: '剑士',
     title: '破晓斩',
-    desc: '均衡的近战职业，起步稳、伤害扎实。',
+    desc: '均衡的近战职业，起步稳；攻击有概率吸血。',
     color: '#c45c26',
     maxHp: 70,
-    energy: 3,
+    energy: 4,
+    /** 攻击牌造成伤害后：30% 概率回复伤害量 50% 的生命 */
+    passive: {
+      attackLifestealChance: 0.3,
+      attackLifestealRatio: 0.5,
+    },
     startGold: 50,
     goldPerTurn: 12,
     unlock: { type: 'default' }, // TODO: 测试完改回 floors/wins 解锁
@@ -24,7 +29,7 @@ export const CLASSES = {
     desc: '高费高伤，擅长范围咒术与灼烧。',
     color: '#3d6b8c',
     maxHp: 55,
-    energy: 3,
+    energy: 4,
     startGold: 55,
     goldPerTurn: 14,
     unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'floors', value: 5 }
@@ -41,7 +46,7 @@ export const CLASSES = {
     desc: '脆皮爆发，击杀回能，速战速决。',
     color: '#5a3d6b',
     maxHp: 48,
-    energy: 4,
+    energy: 5,
     startGold: 60,
     goldPerTurn: 13,
     unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'wins', value: 2 }
@@ -58,7 +63,7 @@ export const CLASSES = {
     desc: '厚血高防，以守待攻，反伤见长。',
     color: '#4a6b3d',
     maxHp: 90,
-    energy: 3,
+    energy: 4,
     startGold: 45,
     goldPerTurn: 11,
     unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'wins', value: 4 }

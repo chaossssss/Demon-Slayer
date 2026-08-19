@@ -573,7 +573,8 @@ export const useGameStore = defineStore('game', {
       const targets = this.enemies.filter((e) => targetUids.includes(e.uid) && e.hp > 0)
       const aliveBefore = new Set(targets.map((e) => e.uid))
 
-      this.applyCardEffects(s, targetUids)
+      let totalDealt = 0
+      totalDealt += this.applyCardEffects(s, targetUids).dealt
       this.pushLog(`打出 ${starLabel}${card.name}`)
 
       if (card.star >= MAX_STAR && tpl.ultimate?.effect) {
@@ -583,7 +584,7 @@ export const useGameStore = defineStore('game', {
 
         if (killHeal) {
           const { heal, killHeal: _kh, ...rest } = effect
-          this.applyCardEffects(rest, targetUids)
+          totalDealt += this.applyCardEffects(rest, targetUids).dealt
           const killed = [...aliveBefore].some((id) => {
             const e = this.enemies.find((x) => x.uid === id)
             return e && e.hp <= 0
@@ -603,12 +604,31 @@ export const useGameStore = defineStore('game', {
             }
           }
         } else {
-          this.applyCardEffects(effect, targetUids)
+          totalDealt += this.applyCardEffects(effect, targetUids).dealt
         }
 
         this.pushLog(`触发大招「${tpl.ultimate.name}」！`)
         this.showMergeToast(`大招：${tpl.ultimate.name}`)
       }
+
+      this.tryClassAttackLifesteal(card, totalDealt)
+    },
+
+    /** 剑士被动：攻击牌造成伤害后，概率按伤害量吸血 */
+    tryClassAttackLifesteal(card, dealt) {
+      const passive = CLASSES[this.classId]?.passive
+      if (!passive || card.type !== 'attack' || dealt <= 0) return
+      if (this.hp >= this.maxHp) return
+      const chance = passive.attackLifestealChance || 0
+      const ratio = passive.attackLifestealRatio || 0
+      if (chance <= 0 || ratio <= 0) return
+      if (Math.random() >= chance) return
+      const heal = Math.min(Math.max(1, Math.floor(dealt * ratio)), this.maxHp - this.hp)
+      if (heal <= 0) return
+      this.hp += heal
+      this.pushLog(`破晓吸血：回复 ${heal} 生命。`)
+      const prefix = this.mergeToast ? `${this.mergeToast} · ` : ''
+      this.showMergeToast(`${prefix}吸血：+${heal}`)
     },
 
     applyCardEffects(s, targetUids = null) {
