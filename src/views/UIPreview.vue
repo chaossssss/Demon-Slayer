@@ -1267,7 +1267,7 @@ const mockClasses = [
     name: "咒术师",
     title: "炎符",
     color: "#3d6b8c",
-    desc: "高费高伤，擅长范围咒术与灼烧。",
+    desc: "高费高伤，攻击有概率施加额外灼烧。",
     maxHp: 55,
     energy: 4,
     startGold: 55,
@@ -1281,7 +1281,7 @@ const mockClasses = [
     name: "影刃",
     title: "夜狩",
     color: "#5a3d6b",
-    desc: "脆皮爆发，击杀回能，速战速决。",
+    desc: "脆皮爆发，攻击有概率暴击，速战速决。",
     maxHp: 48,
     energy: 5,
     startGold: 60,
@@ -1296,7 +1296,7 @@ const mockClasses = [
     name: "御盾",
     title: "铁壁",
     color: "#4a6b3d",
-    desc: "厚血高防，以守待攻，反伤见长。",
+    desc: "厚血高防，受到攻击有概率反伤。",
     maxHp: 90,
     energy: 4,
     startGold: 45,
@@ -1402,7 +1402,7 @@ const handCards = [
 
 const cardsAttack1 = [
   { name: "斩击", cost: 1, desc: "造成 8 点伤害", price: 18 },
-  { name: "炎咒", cost: 1, desc: "造成 7 伤害，施加 2 灼烧", price: 18 },
+  { name: "炎咒", cost: 1, desc: "造成 7 伤害，施加 1 灼烧", price: 18 },
   { name: "刺击", cost: 1, desc: "造成 9 点伤害", price: 17 },
   { name: "重击", cost: 1, desc: "造成 6 伤害，3 护甲", price: 18 },
 ];
@@ -1423,7 +1423,7 @@ const cardsAttack3 = [
   {
     name: "业火",
     cost: 2,
-    desc: "33 伤害 +11 灼烧。【焚天劫】+32穿透+12灼烧",
+    desc: "33 伤害 +6 灼烧。【焚天劫】+32穿透+6灼烧",
     price: 308,
     ultName: "焚天劫",
   },

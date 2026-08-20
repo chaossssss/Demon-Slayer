@@ -573,9 +573,18 @@ export const useGameStore = defineStore('game', {
       const targets = this.enemies.filter((e) => targetUids.includes(e.uid) && e.hp > 0)
       const aliveBefore = new Set(targets.map((e) => e.uid))
 
+      const critMult = this.rollClassAttackCrit(card)
+      const burnRatio = this.rollClassAttackBurn(card)
+      const effectOpts = {}
+      if (critMult > 1) effectOpts.critMult = critMult
+      if (burnRatio > 0) effectOpts.burnRatio = burnRatio
+
       let totalDealt = 0
-      totalDealt += this.applyCardEffects(s, targetUids).dealt
-      this.pushLog(`打出 ${starLabel}${card.name}`)
+      let extraBurn = 0
+      const first = this.applyCardEffects(s, targetUids, effectOpts)
+      totalDealt += first.dealt
+      extraBurn += first.extraBurn || 0
+      this.pushLog(`打出 ${starLabel}${card.name}${critMult > 1 ? '（暴击！）' : ''}`)
 
       if (card.star >= MAX_STAR && tpl.ultimate?.effect) {
         const effect = { ...tpl.ultimate.effect }
@@ -584,7 +593,9 @@ export const useGameStore = defineStore('game', {
 
         if (killHeal) {
           const { heal, killHeal: _kh, ...rest } = effect
-          totalDealt += this.applyCardEffects(rest, targetUids).dealt
+          const ultHit = this.applyCardEffects(rest, targetUids, effectOpts)
+          totalDealt += ultHit.dealt
+          extraBurn += ultHit.extraBurn || 0
           const killed = [...aliveBefore].some((id) => {
             const e = this.enemies.find((x) => x.uid === id)
             return e && e.hp <= 0
@@ -604,14 +615,65 @@ export const useGameStore = defineStore('game', {
             }
           }
         } else {
-          totalDealt += this.applyCardEffects(effect, targetUids).dealt
+          const ultHit = this.applyCardEffects(effect, targetUids, effectOpts)
+          totalDealt += ultHit.dealt
+          extraBurn += ultHit.extraBurn || 0
         }
 
         this.pushLog(`触发大招「${tpl.ultimate.name}」！`)
         this.showMergeToast(`大招：${tpl.ultimate.name}`)
       }
 
+      if (critMult > 1) {
+        this.pushLog(`夜狩暴击：伤害 ×${critMult}。`)
+        const prefix = this.mergeToast ? `${this.mergeToast} · ` : ''
+        this.showMergeToast(`${prefix}暴击 ×${critMult}`)
+      }
+
+      if (extraBurn > 0) {
+        this.pushLog(`炎符灼烧：额外施加 ${extraBurn} 层灼烧。`)
+        const prefix = this.mergeToast ? `${this.mergeToast} · ` : ''
+        this.showMergeToast(`${prefix}灼烧 +${extraBurn}`)
+      }
+
       this.tryClassAttackLifesteal(card, totalDealt)
+    },
+
+    /** 咒术师被动：攻击牌造成伤害时，概率额外灼烧并返回伤害折算比例；未触发则为 0 */
+    rollClassAttackBurn(card) {
+      const passive = CLASSES[this.classId]?.passive
+      if (!passive || card.type !== 'attack') return 0
+      const chance = passive.attackBurnChance || 0
+      const ratio = passive.attackBurnRatio || 0
+      if (chance <= 0 || ratio <= 0) return 0
+      if (Math.random() >= chance) return 0
+      return ratio
+    },
+
+    /** 影刃被动：攻击牌造成伤害时，概率暴击并返回倍率；未触发则为 1 */
+    rollClassAttackCrit(card) {
+      const passive = CLASSES[this.classId]?.passive
+      if (!passive || card.type !== 'attack') return 1
+      const chance = passive.attackCritChance || 0
+      const mult = passive.attackCritMult || 1
+      if (chance <= 0 || mult <= 1) return 1
+      if (Math.random() >= chance) return 1
+      return mult
+    },
+
+    /** 御盾被动：受到攻击时，概率按本次攻击伤害反伤（格挡仍可触发） */
+    tryClassDefendReflect(enemy, incomingDmg) {
+      const passive = CLASSES[this.classId]?.passive
+      if (!passive || !enemy || enemy.hp <= 0 || incomingDmg <= 0) return
+      const chance = passive.defendReflectChance || 0
+      const ratio = passive.defendReflectRatio || 0
+      if (chance <= 0 || ratio <= 0) return
+      if (Math.random() >= chance) return
+      const reflect = Math.max(1, Math.floor(incomingDmg * ratio))
+      const dealt = this.dealDamageToEnemy(enemy.uid, reflect, true)
+      if (dealt <= 0) return
+      this.pushLog(`铁壁反甲：对 ${enemy.name} 反伤 ${dealt} 点。`)
+      this.showMergeToast(`反甲：${dealt}`)
     },
 
     /** 剑士被动：攻击牌造成伤害后，概率按伤害量吸血 */
@@ -631,10 +693,13 @@ export const useGameStore = defineStore('game', {
       this.showMergeToast(`${prefix}吸血：+${heal}`)
     },
 
-    applyCardEffects(s, targetUids = null) {
-      if (!s) return { dealt: 0, killed: false }
+    applyCardEffects(s, targetUids = null, opts = {}) {
+      if (!s) return { dealt: 0, killed: false, extraBurn: 0 }
       const mods = this.relicMods
+      const critMult = opts.critMult > 1 ? opts.critMult : 1
+      const burnRatio = opts.burnRatio > 0 ? opts.burnRatio : 0
       let dealt = 0
+      let extraBurn = 0
 
       // 自身效果只结算一次
       if (s.block) this.block += Math.max(0, s.block + (mods.blockFlat || 0))
@@ -674,12 +739,19 @@ export const useGameStore = defineStore('game', {
         if (s.executeBonus && enemy.hp <= enemy.maxHp / 2) {
           dmg += s.executeBonus
         }
+        if (critMult > 1 && dmg) dmg = Math.round(dmg * critMult)
         const hits = s.hits || (dmg ? 1 : 0)
         for (let i = 0; i < hits; i++) {
           dealt += this.dealDamageToEnemy(enemy.uid, dmg, !!s.pierce)
         }
-        if (s.burn) {
-          enemy.burnStacks += s.burn + (mods.burnFlat || 0)
+        let addBurn = s.burn || 0
+        if (burnRatio > 0 && dmg) {
+          const extra = Math.max(1, Math.floor(dmg * burnRatio))
+          addBurn += extra
+          extraBurn += extra
+        }
+        if (addBurn) {
+          enemy.burnStacks += addBurn + (mods.burnFlat || 0)
         }
       }
 
@@ -710,7 +782,7 @@ export const useGameStore = defineStore('game', {
         if (heal > 0) this.hp += heal
       }
 
-      return { dealt, killed }
+      return { dealt, killed, extraBurn }
     },
 
     dealDamageToEnemy(enemyOrUid, raw, pierce = false) {
@@ -781,6 +853,8 @@ export const useGameStore = defineStore('game', {
         this.dealDamageToEnemy(e.uid, this.thorns, true)
         this.pushLog(`反伤对 ${e.name} 造成 ${this.thorns} 点。`)
       }
+
+      this.tryClassDefendReflect(e, dmg)
 
       let remaining = dmg
       if (this.block > 0) {

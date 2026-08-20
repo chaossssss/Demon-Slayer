@@ -26,10 +26,15 @@ export const CLASSES = {
     id: 'mage',
     name: '咒术师',
     title: '炎符',
-    desc: '高费高伤，擅长范围咒术与灼烧。',
+    desc: '高费高伤，攻击有概率施加额外灼烧。',
     color: '#3d6b8c',
     maxHp: 55,
     energy: 4,
+    /** 攻击牌造成伤害时：30% 概率额外施加灼烧，层数为本次伤害量 50% */
+    passive: {
+      attackBurnChance: 0.3,
+      attackBurnRatio: 0.5,
+    },
     startGold: 55,
     goldPerTurn: 14,
     unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'floors', value: 5 }
@@ -43,10 +48,15 @@ export const CLASSES = {
     id: 'assassin',
     name: '影刃',
     title: '夜狩',
-    desc: '脆皮爆发，击杀回能，速战速决。',
+    desc: '脆皮爆发，攻击有概率暴击，速战速决。',
     color: '#5a3d6b',
     maxHp: 48,
     energy: 5,
+    /** 攻击牌造成伤害时：30% 概率暴击，本次伤害翻倍 */
+    passive: {
+      attackCritChance: 0.3,
+      attackCritMult: 2,
+    },
     startGold: 60,
     goldPerTurn: 13,
     unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'wins', value: 2 }
@@ -60,10 +70,15 @@ export const CLASSES = {
     id: 'guardian',
     name: '御盾',
     title: '铁壁',
-    desc: '厚血高防，以守待攻，反伤见长。',
+    desc: '厚血高防，受到攻击有概率反伤。',
     color: '#4a6b3d',
     maxHp: 90,
     energy: 4,
+    /** 受到敌人攻击时：30% 概率反伤，造成本次攻击伤害量 50% 的穿透伤害 */
+    passive: {
+      defendReflectChance: 0.3,
+      defendReflectRatio: 0.5,
+    },
     startGold: 45,
     goldPerTurn: 11,
     unlock: { type: 'default' }, // TODO: 测试完改回 { type: 'wins', value: 4 }
@@ -152,11 +167,11 @@ export const CARD_POOL = {
     price: 18,
     classes: ['mage'],
     targetCount: 2,
-    base: { damage: 7, burn: 2 },
+    base: { damage: 7, burn: 1 },
     desc: (s) => `选择至多 2 名敌人，各造成 ${s.damage} 点伤害并施加 ${s.burn} 灼烧`,
     ultimate: {
       name: '赤莲咒',
-      effect: { damage: 18, burn: 8 },
+      effect: { damage: 18, burn: 4 },
       desc: (e) => `对所选敌人各额外造成 ${e.damage} 点伤害，施加 ${e.burn} 灼烧`,
     },
   },
@@ -169,11 +184,11 @@ export const CARD_POOL = {
     price: 40,
     classes: ['mage'],
     targetCount: 3,
-    base: { damage: 12, burn: 4 },
+    base: { damage: 12, burn: 2 },
     desc: (s) => `选择至多 3 名敌人，各造成 ${s.damage} 点伤害并施加 ${s.burn} 灼烧`,
     ultimate: {
       name: '焚天劫',
-      effect: { damage: 32, burn: 12, pierce: true },
+      effect: { damage: 32, burn: 6, pierce: true },
       desc: (e) => `对所选敌人各额外造成 ${e.damage} 点穿透伤害，施加 ${e.burn} 灼烧`,
     },
   },
@@ -190,7 +205,7 @@ export const CARD_POOL = {
     desc: (s) => `获得 ${s.block} 护甲、回复 ${s.heal} 生命；选择至多 2 名敌人各施加 ${s.burn} 灼烧`,
     ultimate: {
       name: '灵域护持',
-      effect: { block: 16, heal: 12, energy: 1, burn: 3 },
+      effect: { block: 16, heal: 12, energy: 1, burn: 2 },
       desc: (e) => `额外获得 ${e.block} 护甲、回复 ${e.heal} 生命与 ${e.energy} 能量；对所选敌人各施加 ${e.burn} 灼烧`,
     },
   },
