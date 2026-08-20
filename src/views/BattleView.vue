@@ -97,7 +97,10 @@
 
     <section class="hand-dock" v-if="game.phase === 'combat'">
       <div class="hand-wrap">
-        <p class="hand-count">手牌 {{ game.hand.length }} / 10</p>
+        <div class="hand-bar">
+          <p class="hand-count">手牌 {{ game.hand.length }} / 10</p>
+          <button class="btn btn-primary end-turn" @click="game.endTurn()">结束回合</button>
+        </div>
         <div class="hand" :style="handStyle">
           <GameCard
             v-for="(card, i) in handCards"
@@ -111,7 +114,6 @@
           />
         </div>
       </div>
-      <button class="btn btn-primary end-turn" @click="game.endTurn()">结束回合</button>
     </section>
 
     <section class="hand-dock rest-dock" v-else-if="game.phase === 'shop'">
@@ -423,8 +425,15 @@ const restHandStyle = computed(() => handLayoutStyle(restCards.value.length))
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  max-width: min(980px, calc(100vw - 180px));
+  max-width: min(1100px, calc(100vw - 48px));
   min-width: 0;
+}
+
+.hand-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
 }
 
 .hand-count {
@@ -432,6 +441,7 @@ const restHandStyle = computed(() => handLayoutStyle(restCards.value.length))
   font-size: 13px;
   letter-spacing: 0.04em;
   color: rgba(236, 224, 200, 0.72);
+  white-space: nowrap;
 }
 
 .hand {
@@ -474,8 +484,9 @@ const restHandStyle = computed(() => handLayoutStyle(restCards.value.length))
 }
 
 .end-turn {
-  align-self: center;
-  min-width: 140px;
+  min-width: 120px;
+  padding: 8px 16px;
+  font-size: 0.92rem;
   flex-shrink: 0;
   z-index: 30;
 }
