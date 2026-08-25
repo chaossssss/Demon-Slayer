@@ -1,0 +1,93 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/play_vfx.gd" id="1_play"]
+[ext_resource type="Script" path="res://scripts/heal_sigil.gd" id="2_sigil"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_add"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_orb"]
+offsets = PackedFloat32Array(0, 0.1, 0.35, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.788, 0.635, 0.153, 0.75, 0.557, 0.769, 0.659, 0.35, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_orb"]
+gradient = SubResource("Gradient_orb")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="Gradient" id="Gradient_mote"]
+offsets = PackedFloat32Array(0, 0.3, 1)
+colors = PackedColorArray(1, 0.96, 0.78, 1, 0.788, 0.635, 0.153, 0.95, 0.24, 0.42, 0.31, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_mote"]
+gradient = SubResource("Gradient_mote")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_mote"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 28.0
+direction = Vector3(0, -1, 0)
+spread = 22.0
+initial_velocity_min = 24.0
+initial_velocity_max = 68.0
+gravity = Vector3(0, -22, 0)
+scale_min = 0.12
+scale_max = 0.32
+color_ramp = SubResource("GradientTexture1D_mote")
+
+[sub_resource type="Gradient" id="Gradient_ring"]
+offsets = PackedFloat32Array(0, 0.2, 1)
+colors = PackedColorArray(0.788, 0.635, 0.153, 0.95, 0.557, 0.769, 0.659, 0.65, 0.557, 0.769, 0.659, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_ring"]
+gradient = SubResource("Gradient_ring")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ring"]
+particle_flag_disable_z = true
+emission_shape = 6
+emission_ring_axis = Vector3(0, 0, 1)
+emission_ring_height = 0.0
+emission_ring_radius = 42.0
+emission_ring_inner_radius = 38.0
+direction = Vector3(0, 0, 0)
+spread = 180.0
+initial_velocity_min = 6.0
+initial_velocity_max = 18.0
+radial_velocity_min = 16.0
+radial_velocity_max = 34.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.14
+scale_max = 0.28
+color_ramp = SubResource("GradientTexture1D_ring")
+
+[node name="heal" type="Node2D"]
+script = ExtResource("1_play")
+
+[node name="Sigil" type="Node2D" parent="."]
+script = ExtResource("2_sigil")
+
+[node name="Motes" type="GPUParticles2D" parent="."]
+material = SubResource("CanvasItemMaterial_add")
+emitting = false
+amount = 54
+lifetime = 1.05
+one_shot = true
+explosiveness = 0.18
+randomness = 0.5
+process_material = SubResource("ParticleProcessMaterial_mote")
+texture = SubResource("GradientTexture2D_orb")
+visibility_rect = Rect2(-160, -220, 320, 320)
+
+[node name="Ring" type="GPUParticles2D" parent="."]
+material = SubResource("CanvasItemMaterial_add")
+emitting = false
+amount = 36
+lifetime = 0.82
+one_shot = true
+explosiveness = 0.7
+process_material = SubResource("ParticleProcessMaterial_ring")
+texture = SubResource("GradientTexture2D_orb")
+visibility_rect = Rect2(-160, -160, 320, 320)

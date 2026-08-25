@@ -1,0 +1,90 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/play_vfx.gd" id="1_play"]
+[ext_resource type="Script" path="res://scripts/smoke_veil.gd" id="2_veil"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_add"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_wisp"]
+offsets = PackedFloat32Array(0, 0.18, 0.55, 1)
+colors = PackedColorArray(1, 1, 1, 0.75, 1, 1, 1, 0.42, 1, 1, 1, 0.14, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_wisp"]
+gradient = SubResource("Gradient_wisp")
+width = 160
+height = 160
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="Gradient" id="Gradient_smoke"]
+offsets = PackedFloat32Array(0, 0.28, 0.72, 1)
+colors = PackedColorArray(0.353, 0.239, 0.337, 0.75, 0.16, 0.12, 0.1, 0.45, 0.11, 0.09, 0.07, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_smoke"]
+gradient = SubResource("Gradient_smoke")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_smoke"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 14.0
+direction = Vector3(0.55, -0.65, 0)
+spread = 34.0
+initial_velocity_min = 22.0
+initial_velocity_max = 58.0
+gravity = Vector3(0, -16, 0)
+damping_min = 0.9
+damping_max = 2.0
+scale_min = 0.85
+scale_max = 1.75
+color_ramp = SubResource("GradientTexture1D_smoke")
+
+[sub_resource type="Gradient" id="Gradient_spark"]
+offsets = PackedFloat32Array(0, 0.4, 1)
+colors = PackedColorArray(0.788, 0.635, 0.153, 1, 0.788, 0.635, 0.153, 0.45, 0.788, 0.635, 0.153, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_spark"]
+gradient = SubResource("Gradient_spark")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_spark"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 8.0
+direction = Vector3(0.6, -0.5, 0)
+spread = 38.0
+initial_velocity_min = 35.0
+initial_velocity_max = 95.0
+gravity = Vector3(0, -12, 0)
+scale_min = 0.08
+scale_max = 0.18
+color_ramp = SubResource("GradientTexture1D_spark")
+
+[node name="smoke" type="Node2D"]
+script = ExtResource("1_play")
+
+[node name="Veil" type="Node2D" parent="."]
+script = ExtResource("2_veil")
+
+[node name="Wisps" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 28
+lifetime = 1.15
+one_shot = true
+explosiveness = 0.42
+randomness = 0.55
+process_material = SubResource("ParticleProcessMaterial_smoke")
+texture = SubResource("GradientTexture2D_wisp")
+visibility_rect = Rect2(-200, -240, 400, 380)
+
+[node name="Sparks" type="GPUParticles2D" parent="."]
+material = SubResource("CanvasItemMaterial_add")
+emitting = false
+amount = 24
+lifetime = 0.75
+one_shot = true
+explosiveness = 0.35
+randomness = 0.5
+process_material = SubResource("ParticleProcessMaterial_spark")
+texture = SubResource("GradientTexture2D_wisp")
+visibility_rect = Rect2(-200, -240, 400, 380)

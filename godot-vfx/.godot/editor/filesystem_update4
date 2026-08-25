@@ -1,0 +1,9 @@
+res://scripts/preview.gd
+res://scripts/record_png.gd
+res://scripts/slash_beam.gd
+res://scripts/fire_core.gd
+res://scripts/heal_sigil.gd
+res://scripts/play_vfx.gd
+res://scripts/shield_glyph.gd
+res://scripts/smoke_veil.gd
+res://scripts/fx_shockwave.gd

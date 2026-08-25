@@ -87,8 +87,8 @@
       <div class="rune" aria-hidden="true" />
 
       <div class="hero-slot" :class="{ busy: locked }">
-        <PixelActor v-show="!skillClip" kind="swordsman" :anim="heroAnim" :size="120" />
-        <SkillClip :clip="skillClip" @ended="onSkillEnded" />
+        <PixelActor kind="swordsman" :anim="heroAnim" :size="120" />
+        <VfxHost :items="heroFx" facing="right" @ended="onHeroFxEnded" />
       </div>
 
       <div class="enemy-sprites">
@@ -106,6 +106,7 @@
           @click="onEnemyClick(e)"
         >
           <PixelActor :kind="e.kind" :anim="e.anim" :size="e.elite || e.boss ? 112 : 92" />
+          <VfxHost :items="e.fx" facing="right" @ended="onEnemyFxEnded(e, $event)" />
         </button>
       </div>
     </div>
@@ -163,9 +164,10 @@ import RelicBar from '@/components/RelicBar.vue'
 import ShopPanel from '@/components/ShopPanel.vue'
 import GameCard from '@/components/GameCard.vue'
 import PixelActor from '@/components/PixelActor.vue'
-import SkillClip from '@/components/SkillClip.vue'
+import VfxHost from '@/components/VfxHost.vue'
 import { CARD_POOL, getCardDesc, getCardTargetCount } from '@/data/gameData'
 import { TREASURE_POOL } from '@/data/treasures'
+import { getCardVfx, vfxImpactDelay, vfxPlayDuration } from '@/data/vfx'
 
 const treasures = [TREASURE_POOL.copper_coin, TREASURE_POOL.wooden_amulet, TREASURE_POOL.herb_pouch]
 
@@ -184,8 +186,8 @@ const logCollapsed = ref(true)
 const pendingUid = ref(null)
 const selectedIds = ref([])
 const heroAnim = ref('idle')
-const skillClip = ref(null)
-let skillDone = null
+const heroFx = ref([])
+let fxSeq = 1
 let logSeq = 1
 const log = ref([
   { id: logSeq++, msg: '第 3 层 · 小鬼与血犬拦路。' },
@@ -224,10 +226,11 @@ function makeOffer(cardId, price) {
 
 const hand = ref([
   makeCard('slash'),
-  makeCard('slash'),
+  makeCard('slash', 3),
   makeCard('guard'),
   makeCard('heal_potion'),
   makeCard('ember'),
+  makeCard('smoke'),
 ])
 
 const shop = ref([makeOffer('stab', 17), makeOffer('ward', 17), makeOffer('focus_strike', 32)])
@@ -247,6 +250,7 @@ const enemies = ref([
     elite: false,
     boss: false,
     anim: 'idle',
+    fx: [],
   },
   {
     uid: 'e2',
@@ -262,6 +266,7 @@ const enemies = ref([
     elite: false,
     boss: false,
     anim: 'idle',
+    fx: [],
   },
   {
     uid: 'e3',
@@ -277,6 +282,7 @@ const enemies = ref([
     elite: true,
     boss: false,
     anim: 'idle',
+    fx: [],
   },
 ])
 
@@ -331,25 +337,16 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function onSkillEnded() {
-  skillClip.value = null
-  skillDone?.()
-  skillDone = null
+function spawnFx(listRef, tag, ult) {
+  listRef.value = [...listRef.value, { id: fxSeq++, tag, ult }]
 }
 
-async function playSkillClip(card) {
-  await new Promise((resolve) => {
-    skillDone = resolve
-    skillClip.value = {
-      classId: 'swordsman',
-      cardId: card.cardId,
-      star: card.star || 1,
-      nonce: Date.now(),
-    }
-    setTimeout(() => {
-      if (skillDone === resolve) onSkillEnded()
-    }, 5000)
-  })
+function onHeroFxEnded(id) {
+  heroFx.value = heroFx.value.filter((item) => item.id !== id)
+}
+
+function onEnemyFxEnded(enemy, id) {
+  enemy.fx = enemy.fx.filter((item) => item.id !== id)
 }
 
 function playCard(card) {
@@ -388,10 +385,17 @@ async function resolvePlay(card, targetIds) {
   const tpl = CARD_POOL[card.cardId]
   const isAttack = tpl.type === 'attack' || tpl.base?.damage || tpl.base?.burn
   heroAnim.value = isAttack ? 'attack' : tpl.base?.block ? 'guard' : 'cast'
-  await playSkillClip(card)
+
+  const ult = Number(card.star) >= 3
+  const spec = getCardVfx(card.cardId)
+  for (const tag of spec.hero) spawnFx(heroFx, tag, ult)
+
+  const delay = vfxImpactDelay(card.cardId)
+  if (delay) await wait(delay)
 
   const targets = enemies.value.filter((e) => targetIds.includes(e.uid) && e.hp > 0)
   for (const e of targets) {
+    e.fx = [...e.fx, ...spec.targets.map((tag) => ({ id: fxSeq++, tag, ult }))]
     if (tpl.base?.damage) {
       let dmg = tpl.base.damage
       if (e.block) {
@@ -422,7 +426,8 @@ async function resolvePlay(card, targetIds) {
   const idx = hand.value.findIndex((c) => c.uid === card.uid)
   if (idx >= 0) hand.value.splice(idx, 1)
 
-  await wait(360)
+  const remain = Math.max(180, vfxPlayDuration(card.cardId, card.star) - delay)
+  await wait(remain)
   heroAnim.value = 'idle'
   for (const e of enemies.value) {
     if (e.hp > 0 && e.anim !== 'die') e.anim = 'idle'
@@ -450,9 +455,11 @@ async function endTurn() {
     if (remaining > 0) {
       hp.value = Math.max(0, hp.value - remaining)
       heroAnim.value = 'hurt'
+      spawnFx(heroFx, 'slash', false)
       pushLog(`${e.name} 攻击，你受到 ${remaining} 点伤害。`)
     } else {
       heroAnim.value = 'guard'
+      spawnFx(heroFx, 'shield', false)
       pushLog(`${e.name} 的攻击被完全格挡。`)
     }
     await wait(320)
@@ -745,6 +752,7 @@ function rerollShop() {
   align-items: center;
   background: none;
   color: inherit;
+  overflow: visible;
 }
 
 .hero-slot {

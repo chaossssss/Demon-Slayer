@@ -1,0 +1,17 @@
+78098b89c88a74ebe8c20117b8754620
+::res://::1787618446
+icon.svg::CompressedTexture2D::8699076915309104347::1787564520::1787618448::1::::<><><>0<>0<>db0fa23646b00e17da0b798e8e9e7f6c<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+README.md::TextFile::-1::1787564557::0::1::::<><><>0<>0<><>::
+::res://export/::1787564557
+::res://scripts/::1787564523
+play_vfx.gd::GDScript::6904513592971669625::1787564520::0::1::::<>Node2D<><>0<>0<><>::
+preview.gd::GDScript::6661241488592480954::1787564523::0::1::::<>Node2D<><>0<>0<><>::
+record_png.gd::GDScript::6500490649489405658::1787564523::0::1::::<>Node<><>0<>0<><>::
+slash_beam.gd::GDScript::8159935526918854706::1787564569::0::1::::<>Line2D<><>0<>0<><>::
+::res://vfx/::1787564557
+fire.tscn::PackedScene::-1::1787564540::0::1::::<><><>0<>0<><>::res://scripts/play_vfx.gd
+heal.tscn::PackedScene::-1::1787564545::0::1::::<><><>0<>0<><>::res://scripts/play_vfx.gd
+preview.tscn::PackedScene::-1::1787564557::0::1::::<><><>0<>0<><>::res://scripts/preview.gd<>res://scripts/record_png.gd<>res://vfx/slash.tscn<>res://vfx/fire.tscn<>res://vfx/heal.tscn<>res://vfx/shield.tscn<>res://vfx/smoke.tscn
+shield.tscn::PackedScene::-1::1787564549::0::1::::<><><>0<>0<><>::res://scripts/play_vfx.gd
+slash.tscn::PackedScene::-1::1787564536::0::1::::<><><>0<>0<><>::res://scripts/play_vfx.gd<>res://scripts/slash_beam.gd
+smoke.tscn::PackedScene::-1::1787564553::0::1::::<><><>0<>0<><>::res://scripts/play_vfx.gd

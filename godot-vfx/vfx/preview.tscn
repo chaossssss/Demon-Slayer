@@ -1,0 +1,81 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/preview.gd" id="1_preview"]
+[ext_resource type="Script" path="res://scripts/record_png.gd" id="2_rec"]
+[ext_resource type="PackedScene" path="res://vfx/slash.tscn" id="3_slash"]
+[ext_resource type="PackedScene" path="res://vfx/fire.tscn" id="4_fire"]
+[ext_resource type="PackedScene" path="res://vfx/heal.tscn" id="5_heal"]
+[ext_resource type="PackedScene" path="res://vfx/shield.tscn" id="6_shield"]
+[ext_resource type="PackedScene" path="res://vfx/smoke.tscn" id="7_smoke"]
+
+[sub_resource type="Gradient" id="Gradient_bg"]
+offsets = PackedFloat32Array(0, 0.55, 1)
+colors = PackedColorArray(0.102, 0.082, 0.059, 1, 0.165, 0.129, 0.094, 1, 0.102, 0.082, 0.059, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_bg"]
+gradient = SubResource("Gradient_bg")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.15)
+fill_to = Vector2(0.5, 1)
+
+[node name="Preview" type="Node2D"]
+script = ExtResource("1_preview")
+
+[node name="Bg" type="TextureRect" parent="."]
+offset_right = 512.0
+offset_bottom = 512.0
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Rune" type="Line2D" parent="."]
+position = Vector2(256, 318)
+width = 1.2
+default_color = Color(0.788, 0.635, 0.153, 0.22)
+closed = true
+antialiased = true
+points = PackedVector2Array(-92, 0, -64, -18, 0, -24, 64, -18, 92, 0, 64, 18, 0, 24, -64, 18)
+
+[node name="Actor" type="Polygon2D" parent="."]
+position = Vector2(256, 292)
+color = Color(0.769, 0.361, 0.149, 0.92)
+polygon = PackedVector2Array(-14, -34, 14, -34, 18, 8, 10, 34, -10, 34, -18, 8)
+
+[node name="ActorShadow" type="Polygon2D" parent="."]
+position = Vector2(256, 324)
+color = Color(0, 0, 0, 0.35)
+polygon = PackedVector2Array(-22, 0, 22, 0, 18, 6, -18, 6)
+
+[node name="Stage" type="Node2D" parent="."]
+position = Vector2(256, 292)
+
+[node name="slash" parent="Stage" instance=ExtResource("3_slash")]
+
+[node name="fire" parent="Stage" instance=ExtResource("4_fire")]
+visible = false
+
+[node name="heal" parent="Stage" instance=ExtResource("5_heal")]
+visible = false
+
+[node name="shield" parent="Stage" instance=ExtResource("6_shield")]
+visible = false
+
+[node name="smoke" parent="Stage" instance=ExtResource("7_smoke")]
+visible = false
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Hint" type="Label" parent="UI"]
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 500.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(0.85, 0.8, 0.7, 1)
+theme_override_font_sizes/font_size = 13
+text = "1斩击 2业火 3治疗 4护盾 5烟雾"
+
+[node name="Recorder" type="Node" parent="."]
+script = ExtResource("2_rec")
