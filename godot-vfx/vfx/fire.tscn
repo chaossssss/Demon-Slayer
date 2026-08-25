@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/play_vfx.gd" id="1_play"]
 [ext_resource type="Script" path="res://scripts/fire_core.gd" id="2_core"]
@@ -7,20 +7,20 @@
 blend_mode = 1
 
 [sub_resource type="Gradient" id="Gradient_orb"]
-offsets = PackedFloat32Array(0, 0.08, 0.32, 1)
-colors = PackedColorArray(1, 1, 1, 1, 1, 0.95, 0.72, 0.95, 0.788, 0.635, 0.153, 0.5, 1, 1, 1, 0)
+offsets = PackedFloat32Array(0, 0.08, 0.35, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.9, 0.97, 1, 0.9, 0.55, 0.78, 0.95, 0.45, 1, 1, 1, 0)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_orb"]
 gradient = SubResource("Gradient_orb")
-width = 128
-height = 128
+width = 96
+height = 96
 fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(0.5, 0)
 
 [sub_resource type="Gradient" id="Gradient_flame"]
-offsets = PackedFloat32Array(0, 0.12, 0.38, 0.68, 1)
-colors = PackedColorArray(1, 1, 0.92, 1, 1, 0.93, 0.68, 1, 0.788, 0.635, 0.153, 0.95, 0.608, 0.176, 0.118, 0.75, 0.2, 0.08, 0.06, 0)
+offsets = PackedFloat32Array(0, 0.15, 0.45, 0.75, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.85, 0.95, 1, 0.95, 0.55, 0.78, 0.95, 0.8, 0.35, 0.5, 0.75, 0.4, 0.15, 0.2, 0.35, 0)
 
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_flame"]
 gradient = SubResource("Gradient_flame")
@@ -28,21 +28,21 @@ gradient = SubResource("Gradient_flame")
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_flame"]
 particle_flag_disable_z = true
 emission_shape = 1
-emission_sphere_radius = 14.0
+emission_sphere_radius = 8.0
 direction = Vector3(0, -1, 0)
-spread = 12.0
-initial_velocity_min = 70.0
-initial_velocity_max = 150.0
-gravity = Vector3(0, -42, 0)
-damping_min = 0.5
-damping_max = 1.4
-scale_min = 0.45
-scale_max = 1.05
+spread = 8.0
+initial_velocity_min = 80.0
+initial_velocity_max = 160.0
+gravity = Vector3(0, -35, 0)
+damping_min = 0.8
+damping_max = 1.8
+scale_min = 0.25
+scale_max = 0.55
 color_ramp = SubResource("GradientTexture1D_flame")
 
 [sub_resource type="Gradient" id="Gradient_ember"]
-offsets = PackedFloat32Array(0, 0.35, 1)
-colors = PackedColorArray(1, 0.92, 0.58, 1, 0.788, 0.635, 0.153, 0.95, 0.608, 0.176, 0.118, 0)
+offsets = PackedFloat32Array(0, 0.4, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.7, 0.88, 1, 0.9, 0.45, 0.65, 0.85, 0)
 
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_ember"]
 gradient = SubResource("Gradient_ember")
@@ -50,14 +50,14 @@ gradient = SubResource("Gradient_ember")
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ember"]
 particle_flag_disable_z = true
 emission_shape = 1
-emission_sphere_radius = 10.0
+emission_sphere_radius = 6.0
 direction = Vector3(0, -1, 0)
-spread = 24.0
-initial_velocity_min = 90.0
+spread = 12.0
+initial_velocity_min = 100.0
 initial_velocity_max = 220.0
-gravity = Vector3(0, -28, 0)
-scale_min = 0.1
-scale_max = 0.28
+gravity = Vector3(0, -20, 0)
+scale_min = 0.05
+scale_max = 0.12
 color_ramp = SubResource("GradientTexture1D_ember")
 
 [node name="fire" type="Node2D"]
@@ -69,25 +69,25 @@ script = ExtResource("2_core")
 [node name="Flames" type="GPUParticles2D" parent="."]
 material = SubResource("CanvasItemMaterial_add")
 emitting = false
-amount = 64
-lifetime = 0.82
+amount = 36
+lifetime = 0.55
 one_shot = true
-explosiveness = 0.18
-randomness = 0.45
+explosiveness = 0.35
+randomness = 0.25
 process_material = SubResource("ParticleProcessMaterial_flame")
 texture = SubResource("GradientTexture2D_orb")
-visibility_rect = Rect2(-160, -260, 320, 340)
+visibility_rect = Rect2(-120, -220, 240, 300)
 
 [node name="Embers" type="GPUParticles2D" parent="."]
 material = SubResource("CanvasItemMaterial_add")
 emitting = false
-amount = 72
-lifetime = 1.0
+amount = 40
+lifetime = 0.65
 one_shot = true
-explosiveness = 0.15
-randomness = 0.55
+explosiveness = 0.4
+randomness = 0.3
 trail_enabled = true
-trail_lifetime = 0.22
+trail_lifetime = 0.1
 process_material = SubResource("ParticleProcessMaterial_ember")
 texture = SubResource("GradientTexture2D_orb")
-visibility_rect = Rect2(-160, -280, 320, 360)
+visibility_rect = Rect2(-120, -240, 240, 320)
