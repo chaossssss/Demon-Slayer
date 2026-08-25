@@ -26,10 +26,10 @@ defineEmits(['ended'])
 .vfx-host {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 42%;
   z-index: 6;
-  width: 250%;
-  height: 250%;
+  width: 280%;
+  height: 280%;
   transform: translate(-50%, -50%);
   pointer-events: none;
   overflow: visible;

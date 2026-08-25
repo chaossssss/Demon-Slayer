@@ -248,6 +248,370 @@
         </div>
       </section>
 
+      <!-- 03.5 像素战场改版 -->
+      <section id="pixel-arena" class="preview-section fade-up">
+        <div class="section-label">03.5 · 像素战场 Pixel Arena (V2改版)</div>
+
+        <div class="arena-layout-title">
+          目标布局 · 2D像素战场 + HUD（战斗规则不变，三栏面板改版为左右对战）
+        </div>
+
+        <div class="pixel-arena-mock">
+          <div class="arena-frame">
+            <div class="pixel-bg" aria-hidden="true">
+              <div class="pixel-sky"></div>
+              <div class="pixel-mountains"></div>
+              <div class="pixel-ground"></div>
+              <div class="pixel-grid"></div>
+            </div>
+
+            <header class="pxhud-top">
+              <div class="pxhud-left">
+                <div
+                  class="px-class-icon"
+                  style="background: linear-gradient(135deg, #c45c26, #7a3410)"
+                >
+                  <span>剑</span>
+                </div>
+                <div class="px-class-meta">
+                  <div class="px-class-name" style="color: #c45c26">
+                    剑士 · 破晓斩
+                  </div>
+                  <div class="px-floor-turn">
+                    <span class="px-floor-chip"
+                      >第 <strong>7</strong> / 10 层</span
+                    >
+                    <span class="px-turn-chip">回合 <strong>3</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pxhud-center">
+                <div class="px-floornav">
+                  <div
+                    v-for="n in 10"
+                    :key="'pxf' + n"
+                    class="px-fnode"
+                    :class="{
+                      passed: n <= 7,
+                      current: n === 7,
+                      elite: n % 3 === 0,
+                      boss: n === 10,
+                    }"
+                  >
+                    <span>{{ n === 10 ? "王" : n % 3 === 0 ? "精" : n }}</span>
+                  </div>
+                  <div class="px-floorline" style="width: 65%"></div>
+                </div>
+              </div>
+
+              <div class="pxhud-right">
+                <div class="px-relic-row">
+                  <div class="px-relic" title="日轮金御守 · 每回合+2金币">
+                    <span
+                      class="px-relic-ico"
+                      style="
+                        background: linear-gradient(135deg, #c9a227, #8a6a12);
+                      "
+                      >守</span
+                    >
+                  </div>
+                  <div class="px-relic cursed" title="血玉珠 · 攻+2 HP-5">
+                    <span
+                      class="px-relic-ico"
+                      style="
+                        background: linear-gradient(135deg, #9b2d1f, #5a1a10);
+                      "
+                      >珠</span
+                    >
+                    <span class="px-curse-mark">±</span>
+                  </div>
+                  <div class="px-relic" title="符咒水引 · 灼烧+1层">
+                    <span
+                      class="px-relic-ico"
+                      style="
+                        background: linear-gradient(135deg, #3d6b8c, #1f3a5a);
+                      "
+                      >符</span
+                    >
+                  </div>
+                  <div class="px-relic empty"><span>+</span></div>
+                  <div class="px-relic empty"><span>+</span></div>
+                </div>
+              </div>
+
+              <aside class="px-combat-log" :class="{ collapsed: true }">
+                <button type="button" class="px-log-toggle">
+                  战报 <span>▾</span>
+                </button>
+              </aside>
+            </header>
+
+            <div class="pxhud-sub">
+              <div class="pxhp-block">
+                <div class="pxhp-head">
+                  <span class="pxhp-ico">❤</span>
+                  <span class="pxhp-label">生命</span>
+                  <span class="pxhp-val"><strong>52</strong> / 70</span>
+                  <span class="pxblock-tag">
+                    <span class="pxblock-ico">🛡</span>
+                    <strong>12</strong><small>护甲</small>
+                  </span>
+                </div>
+                <div class="pxhp-bar">
+                  <div class="pxhp-fill" style="width: 74%"></div>
+                  <div class="pxblock-seg" style="left: 74%; width: 14%"></div>
+                </div>
+              </div>
+
+              <div class="pxchips-row">
+                <div class="pxchip gold">
+                  <div class="pxchip-ico">金</div>
+                  <div class="pxchip-val">
+                    <strong>128</strong><small>+18/回合</small>
+                  </div>
+                </div>
+                <div class="pxchip energy">
+                  <div class="pxchip-ico">能</div>
+                  <div class="pxchip-val">
+                    <div class="px-energydots">
+                      <span class="on"></span><span class="on"></span
+                      ><span class="off"></span>
+                    </div>
+                    <small>2 / 3</small>
+                  </div>
+                </div>
+                <div class="pxchip deck">
+                  <div class="pxchip-ico">牌</div>
+                  <div class="pxchip-val">
+                    <strong>24</strong>
+                    <div class="px-deckmini">
+                      <span class="d-draw">抽12</span
+                      ><span class="d-discard">弃7</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="pxchip thorns">
+                  <div class="pxchip-ico">反</div>
+                  <div class="pxchip-val">
+                    <strong>4</strong><small>反伤</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pxbattle-stage">
+              <div class="pxhero-area">
+                <div class="pxhero-status left-panel">
+                  <div class="left-panel-head">
+                    <strong>剑士 · 破晓斩</strong>
+                  </div>
+                  <div class="px-state-row">
+                    <span class="chip block">甲 12</span>
+                    <span class="chip energy">能 2</span>
+                    <span class="chip thorns">反 4</span>
+                  </div>
+                </div>
+
+                <div class="pxhero-actor">
+                  <div class="pxactor-wrap idle">
+                    <svg
+                      class="pxsheet swordsman"
+                      viewBox="0 0 16 16"
+                      shape-rendering="crispEdges"
+                      aria-hidden="true"
+                    >
+                      <rect
+                        v-for="(p, i) in pxSwordsman"
+                        :key="'sm' + i"
+                        :x="p.x"
+                        :y="p.y"
+                        width="1"
+                        height="1"
+                        :fill="p.fill"
+                      />
+                    </svg>
+                    <div class="pxactor-shadow"></div>
+                  </div>
+                  <div class="pxactor-label">玩家</div>
+                </div>
+              </div>
+
+              <div class="pxcenter-zone">
+                <button class="pxshop-btn" type="button">
+                  <span class="shop-ico">💰</span>
+                  <span class="shop-text">市集</span>
+                </button>
+                <div class="px-rune-circle" aria-hidden="true"></div>
+              </div>
+
+              <div class="pxenemies-area">
+                <div
+                  class="pxenemy-unit"
+                  v-for="(e, ei) in pxEnemies"
+                  :key="'pxe' + ei"
+                  :class="{
+                    selected: ei === 1,
+                    targeting: true,
+                    elite: e.elite,
+                    boss: e.boss,
+                  }"
+                >
+                  <div class="pxenemy-state">
+                    <div class="pxenemy-head">
+                      <span
+                        class="pxbadge"
+                        :class="{ elite: e.elite, boss: e.boss }"
+                      >
+                        {{ e.boss ? "BOSS" : e.elite ? "精英" : "妖鬼" }}
+                      </span>
+                      <strong>{{ e.name }}</strong>
+                    </div>
+                    <div class="pxintent-row">
+                      <span class="pxintent" :class="e.intentType">
+                        <span class="pxintent-ico">{{ e.intentIcon }}</span>
+                        <span>{{ e.intentText }}</span>
+                        <strong>{{ e.intentVal }}</strong>
+                      </span>
+                    </div>
+                    <div class="pxhp-small">
+                      <div class="pxhp-small-track">
+                        <div
+                          class="pxhp-small-fill"
+                          :style="{ width: e.hpPct }"
+                        ></div>
+                      </div>
+                      <span class="pxhp-small-val">{{ e.hpText }}</span>
+                    </div>
+                    <div class="px-status-row">
+                      <span v-if="e.block" class="chip block"
+                        >甲 {{ e.block }}</span
+                      >
+                      <span v-if="e.burn" class="chip burn"
+                        >灼 {{ e.burn }}</span
+                      >
+                      <span v-if="e.weaken" class="chip weaken"
+                        >弱 {{ e.weaken }}</span
+                      >
+                    </div>
+                  </div>
+                  <div class="pxenemy-actor">
+                    <div class="pxactor-wrap idle enemy">
+                      <svg
+                        class="pxsheet"
+                        :viewBox="`0 0 16 16`"
+                        shape-rendering="crispEdges"
+                        aria-hidden="true"
+                      >
+                        <rect
+                          v-for="(p, i) in e.kind === 'elite'
+                            ? pxElite
+                            : e.kind === 'hound'
+                            ? pxHound
+                            : pxImp"
+                          :key="'ep' + ei + i"
+                          :x="p.x"
+                          :y="p.y"
+                          width="1"
+                          height="1"
+                          :fill="p.fill"
+                        />
+                      </svg>
+                      <div class="pxactor-shadow"></div>
+                    </div>
+                    <div class="px-target-ring" v-if="ei === 1"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <footer class="pxhand-dock">
+              <div class="pxhand-wrap">
+                <div class="pxhand-meta">
+                  <span class="pxhand-count">手牌 6 / 10</span>
+                </div>
+                <div class="pxhand-cards">
+                  <div
+                    v-for="(card, ci) in pxHandCards"
+                    :key="'pxhc' + ci"
+                    class="pxcard"
+                    :class="[
+                      `type-${card.type}`,
+                      { playable: card.playable, ultimate: card.ult },
+                    ]"
+                    :style="{
+                      transform: `rotate(${(ci - 2.5) * 2.5}deg) translateY(${
+                        Math.abs(ci - 2.5) * 5
+                      }px)`,
+                    }"
+                  >
+                    <div class="pxcard-top">
+                      <span class="pxcard-cost">{{ card.cost }}</span>
+                      <span class="pxcard-stars">{{
+                        "★".repeat(card.star)
+                      }}</span>
+                    </div>
+                    <div v-if="card.ult" class="pxcard-ultbadge">大招</div>
+                    <h4 class="pxcard-name">{{ card.name }}</h4>
+                    <p v-if="card.ult" class="pxcard-ultname">
+                      {{ card.ultName }}
+                    </p>
+                    <p class="pxcard-desc">{{ card.desc }}</p>
+                    <div class="pxcard-foot">
+                      <span class="pxcard-type">{{ card.typeLabel }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button class="pxend-turn btn btn-primary" type="button">
+                结束回合
+              </button>
+            </footer>
+          </div>
+        </div>
+
+        <div class="arena-layout-note">
+          <div class="note-grid">
+            <div class="note-card panel">
+              <h4>🎯 改版亮点</h4>
+              <ul>
+                <li>
+                  三栏面板 → <strong>左右对战像素战场</strong>，沉浸感更强
+                </li>
+                <li>
+                  顶部 HUD：职业 / 层进度 / 回合 / 血甲条 / 资源 / 宝物 / 战报
+                </li>
+                <li>
+                  角色状态机：idle / attack / cast / hurt / guard / die（每状态
+                  4-8 帧）
+                </li>
+                <li>怪状态挂立绘：徽章 / 意图 / 血条 / 护甲灼烧削弱</li>
+                <li>市集按钮随时可开，新回合自动弹出</li>
+                <li>底部手牌扇状排布，结束回合按钮醒目</li>
+              </ul>
+            </div>
+            <div class="note-card panel">
+              <h4>📐 素材规格</h4>
+              <ul>
+                <li><strong>玩家像素角色</strong>：约 96×96px，侧面站桩</li>
+                <li>
+                  <strong>敌人像素</strong>：小怪 96px，精英/Boss 112~128px
+                </li>
+                <li>
+                  <strong>动画复用</strong>：状态机 +
+                  特效标签（slash/fire/heal/shield/smoke）
+                </li>
+                <li><strong>三星大招</strong>：同一套放大 + 闪金 + 震屏</li>
+                <li>
+                  <strong>战场背景</strong>：分层像素画（天空 / 远山 / 地面 /
+                  法阵）
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 4. 卡牌图鉴 -->
       <section id="cards" class="preview-section fade-up">
         <div class="section-label">04 · 卡牌样式 Cards (16种 × 3星 = 48张)</div>
@@ -1239,6 +1603,7 @@ const sections = [
   { id: "home", name: "首页" },
   { id: "class", name: "职业" },
   { id: "battle", name: "战斗" },
+  { id: "pixel-arena", name: "像素战场" },
   { id: "cards", name: "卡牌" },
   { id: "enemies", name: "敌人" },
   { id: "modals", name: "弹窗" },
@@ -1565,6 +1930,215 @@ const enemies = [
     note: "多眼、巨影、最终敌，第 10 层 BOSS",
     elite: true,
     boss: true,
+  },
+];
+
+const PX_PALETTE = {
+  x: "#1a120c",
+  s: "#e8c49a",
+  e: "#1c1712",
+  y: "#c9a227",
+  o: "#c45c26",
+  w: "#e8e0d0",
+  p: "#5a3d28",
+  r: "#9b2d1f",
+  g: "#4a7a3a",
+  n: "#2d4a24",
+  u: "#3a2028",
+  f: "#8a3a42",
+};
+function parsePx(grid) {
+  const list = [];
+  grid.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const fill = PX_PALETTE[row[x]];
+      if (fill) list.push({ x, y, fill });
+    }
+  });
+  return list;
+}
+const pxSwordsman = parsePx([
+  "................",
+  "......xxxx......",
+  ".....xssssx.....",
+  ".....xseysx.....",
+  ".....xssssx.....",
+  "......xooox.....",
+  ".....xooooox....",
+  "....xooooooox...",
+  "...xwxoooooxxx..",
+  "..xwwxooxx......",
+  ".xww.xoox.......",
+  "xx....xpxpx.....",
+  "......xp.px.....",
+  ".....xx..xx.....",
+  ".....x....x.....",
+  "....xx....xx....",
+]);
+const pxImp = parsePx([
+  "................",
+  "...r......r.....",
+  "..xrr....rrx....",
+  "...xggggggx.....",
+  "..xggeeggggx....",
+  "..xggggggggx....",
+  "...xggggggx.....",
+  "..xxggggggxx....",
+  ".x..xggggx..x...",
+  "....xggggx......",
+  "....xnnnnx......",
+  "...xn....nx.....",
+  "..xx......xx....",
+  "................",
+  "................",
+  "................",
+]);
+const pxHound = parsePx([
+  "................",
+  "................",
+  "....xx....xx....",
+  "...xufx..xufx...",
+  "...xuffffufx....",
+  "..xuffeeuffx....",
+  ".xufffffffx.....",
+  "xufffwffffx.....",
+  ".xuffffffx......",
+  "..xuffffx.......",
+  "...xuffux.......",
+  "...xu..ux.......",
+  "..xx....xx......",
+  "................",
+  "................",
+  "................",
+]);
+const pxElite = parsePx([
+  "................",
+  ".....xgyygx.....",
+  "....xggssggx....",
+  "....xgsyysgx....",
+  "....xggssggx....",
+  ".....xoooox.....",
+  "....xooooooox...",
+  "...xyoooooooyx..",
+  "..xyxoooooooxyx.",
+  ".xwwxooooox.....",
+  "xww.xoooox......",
+  "xx...xpppx......",
+  ".....xp.px......",
+  "....xx...xx.....",
+  "....x.....x.....",
+  "...xx.....xx....",
+]);
+
+const pxEnemies = [
+  {
+    name: "小鬼·甲",
+    kind: "imp",
+    elite: false,
+    boss: false,
+    hpPct: "64%",
+    hpText: "18 / 28",
+    block: 0,
+    burn: 2,
+    weaken: 0,
+    intentType: "attack",
+    intentIcon: "⚔",
+    intentText: "攻击",
+    intentVal: "6",
+  },
+  {
+    name: "血犬·乙",
+    kind: "hound",
+    elite: false,
+    boss: false,
+    hpPct: "100%",
+    hpText: "34 / 34",
+    block: 4,
+    burn: 0,
+    weaken: 1,
+    intentType: "attack",
+    intentIcon: "⚔",
+    intentText: "攻击",
+    intentVal: "7",
+  },
+  {
+    name: "鬼将",
+    kind: "elite",
+    elite: true,
+    boss: false,
+    hpPct: "100%",
+    hpText: "70 / 70",
+    block: 0,
+    burn: 0,
+    weaken: 0,
+    intentType: "attack",
+    intentIcon: "⚔",
+    intentText: "攻击",
+    intentVal: "14",
+  },
+];
+
+const pxHandCards = [
+  {
+    name: "斩击",
+    type: "attack",
+    typeLabel: "攻击",
+    star: 1,
+    cost: 1,
+    desc: "造成 8 点伤害",
+    playable: true,
+    ult: false,
+  },
+  {
+    name: "格挡",
+    type: "skill",
+    typeLabel: "技能",
+    star: 2,
+    cost: 1,
+    desc: "获得 10 点护甲",
+    playable: true,
+    ult: false,
+  },
+  {
+    name: "一心斩",
+    type: "attack",
+    typeLabel: "大招",
+    star: 3,
+    cost: 2,
+    desc: "44伤害。【无想剑】+40伤害+1能量",
+    playable: true,
+    ult: true,
+    ultName: "无想剑",
+  },
+  {
+    name: "裂空",
+    type: "attack",
+    typeLabel: "攻击",
+    star: 2,
+    cost: 2,
+    desc: "造成 38 点伤害",
+    playable: false,
+    ult: false,
+  },
+  {
+    name: "回旋刀",
+    type: "attack",
+    typeLabel: "攻击",
+    star: 1,
+    cost: 1,
+    desc: "造成 5 伤害 × 2 次",
+    playable: true,
+    ult: false,
+  },
+  {
+    name: "疗伤散",
+    type: "skill",
+    typeLabel: "技能",
+    star: 1,
+    cost: 1,
+    desc: "回复 8 点生命",
+    playable: true,
+    ult: false,
   },
 ];
 
@@ -4435,6 +5009,1199 @@ onMounted(() => {
   }
   .nav-links {
     display: none;
+  }
+}
+
+/* ============ 像素战场 Pixel Arena ============ */
+.arena-layout-title {
+  font-family: var(--font-display);
+  color: var(--paper);
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  margin: 0 0 18px;
+  padding: 10px 16px;
+  background: rgba(155, 45, 31, 0.12);
+  border-left: 4px solid var(--blood);
+  border-right: 4px solid var(--blood);
+  text-align: center;
+}
+
+.pixel-arena-mock {
+  margin-bottom: 24px;
+}
+
+.arena-frame {
+  position: relative;
+  border: 2px solid rgba(201, 162, 39, 0.4);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(217, 203, 179, 0.1);
+  background: #1a1210;
+}
+
+.pixel-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.pixel-sky {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 55%;
+  background: radial-gradient(
+      ellipse 60% 80% at 20% 30%,
+      rgba(196, 92, 38, 0.22),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 50% 70% at 80% 20%,
+      rgba(61, 107, 140, 0.18),
+      transparent 55%
+    ),
+    linear-gradient(180deg, #2a1a14 0%, #3a2418 40%, #4a2c1c 100%);
+}
+.pixel-sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+      circle,
+      rgba(236, 224, 200, 0.5) 1px,
+      transparent 1.5px
+    ),
+    radial-gradient(circle, rgba(201, 162, 39, 0.35) 1px, transparent 1.5px);
+  background-size: 90px 90px, 140px 140px;
+  background-position: 0 0, 40px 20px;
+  opacity: 0.3;
+  animation: px-stardrift 24s linear infinite;
+}
+@keyframes px-stardrift {
+  from {
+    background-position: 0 0, 40px 20px;
+  }
+  to {
+    background-position: 0 -90px, 40px -120px;
+  }
+}
+.pixel-mountains {
+  position: absolute;
+  bottom: 42%;
+  left: 0;
+  right: 0;
+  height: 22%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 40%,
+    #2a1a14 40%,
+    #1a100c 100%
+  );
+  clip-path: polygon(
+    0% 100%,
+    5% 55%,
+    12% 80%,
+    18% 40%,
+    26% 70%,
+    34% 30%,
+    42% 65%,
+    50% 20%,
+    58% 60%,
+    66% 35%,
+    74% 70%,
+    82% 45%,
+    90% 65%,
+    96% 50%,
+    100% 100%
+  );
+  opacity: 0.75;
+}
+.pixel-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 42%;
+  background: linear-gradient(180deg, #3a2418 0%, #2a1a12 30%, #1c120c 100%);
+}
+.pixel-ground::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    #5a3a24 0px,
+    #5a3a24 8px,
+    #4a2c18 8px,
+    #4a2c18 16px
+  );
+  opacity: 0.55;
+}
+.pixel-ground::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    #4a2c18 0px,
+    #4a2c18 12px,
+    transparent 12px,
+    transparent 24px
+  );
+  opacity: 0.4;
+}
+.pixel-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      rgba(201, 162, 39, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(201, 162, 39, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+/* --- 顶部HUD --- */
+.pxhud-top {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 8, 5, 0.92),
+    rgba(12, 8, 5, 0.72)
+  );
+  border-bottom: 1px solid rgba(201, 162, 39, 0.25);
+}
+
+.pxhud-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.px-class-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(217, 203, 179, 0.3);
+  border-radius: 4px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(0, 0, 0, 0.3);
+}
+.px-class-icon span {
+  font-family: var(--font-display);
+  color: var(--paper);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+.px-class-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.px-class-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+.px-floor-turn {
+  display: flex;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: rgba(217, 203, 179, 0.75);
+  letter-spacing: 0.06em;
+}
+.px-floor-chip,
+.px-turn-chip {
+  padding: 2px 8px;
+  background: rgba(28, 23, 18, 0.7);
+  border: 1px solid rgba(217, 203, 179, 0.18);
+  border-radius: 2px;
+}
+.px-floor-chip strong,
+.px-turn-chip strong {
+  color: var(--gold);
+  font-family: var(--font-display);
+  margin: 0 2px;
+}
+
+.pxhud-center {
+  display: flex;
+  justify-content: center;
+}
+.px-floornav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  max-width: 480px;
+  width: 100%;
+}
+.px-fnode {
+  position: relative;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: rgba(217, 203, 179, 0.4);
+  background: rgba(28, 23, 18, 0.7);
+  border: 2px solid rgba(217, 203, 179, 0.18);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.px-fnode.passed {
+  color: var(--paper);
+  background: rgba(61, 107, 79, 0.35);
+  border-color: rgba(61, 107, 79, 0.6);
+}
+.px-fnode.current {
+  color: var(--paper);
+  background: var(--blood);
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(155, 45, 31, 0.7), 0 0 24px rgba(201, 162, 39, 0.35);
+  transform: scale(1.12);
+}
+.px-fnode.elite {
+  border-color: rgba(201, 162, 39, 0.6);
+  color: var(--gold);
+}
+.px-fnode.elite.passed {
+  background: rgba(201, 162, 39, 0.25);
+}
+.px-fnode.boss {
+  border-color: var(--blood);
+  color: var(--paper);
+  width: 36px;
+  height: 36px;
+  animation: px-boss-pulse 1.8s ease-in-out infinite;
+}
+@keyframes px-boss-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(155, 45, 31, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(155, 45, 31, 0.9), 0 0 30px rgba(155, 45, 31, 0.4);
+  }
+}
+.px-floorline {
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(61, 107, 79, 0.8),
+    rgba(201, 162, 39, 0.6)
+  );
+  transform: translateY(-50%);
+  z-index: 1;
+  border-radius: 2px;
+}
+
+.pxhud-right {
+  display: flex;
+  align-items: center;
+}
+.px-relic-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.px-relic {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: rgba(28, 23, 18, 0.7);
+  border: 2px solid rgba(201, 162, 39, 0.35);
+  border-radius: 4px;
+}
+.px-relic.empty {
+  border: 2px dashed rgba(217, 203, 179, 0.2);
+  color: rgba(217, 203, 179, 0.25);
+  font-size: 0.9rem;
+}
+.px-relic.cursed {
+  border-color: rgba(155, 45, 31, 0.55);
+}
+.px-relic-ico {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  color: var(--paper);
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 2px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.px-curse-mark {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--blood);
+  color: var(--paper);
+  font-size: 0.65rem;
+  font-weight: 900;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.px-combat-log {
+  position: relative;
+  z-index: 6;
+}
+.px-log-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(28, 23, 18, 0.8);
+  border: 1px solid rgba(217, 203, 179, 0.22);
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+.px-log-toggle:hover {
+  border-color: var(--gold);
+  background: rgba(201, 162, 39, 0.12);
+}
+
+/* --- 次级HUD --- */
+.pxhud-sub {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1.4fr 1.6fr;
+  gap: 14px;
+  padding: 8px 14px;
+  background: rgba(12, 8, 5, 0.55);
+  border-bottom: 1px solid rgba(217, 203, 179, 0.1);
+}
+
+.pxhp-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pxhp-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--paper);
+  font-size: 0.82rem;
+}
+.pxhp-ico {
+  color: var(--blood);
+  font-size: 1rem;
+}
+.pxhp-label {
+  color: rgba(217, 203, 179, 0.75);
+  letter-spacing: 0.08em;
+}
+.pxhp-val strong {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--paper);
+}
+.pxhp-val {
+  color: rgba(217, 203, 179, 0.6);
+}
+.pxblock-tag {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(42, 74, 107, 0.2);
+  border: 1px solid rgba(61, 107, 140, 0.45);
+  border-radius: 2px;
+  color: #8eb4c9;
+  font-size: 0.78rem;
+}
+.pxblock-tag strong {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: #a8cde0;
+}
+.pxblock-tag small {
+  color: rgba(142, 180, 201, 0.65);
+  margin-left: 2px;
+}
+.pxhp-bar {
+  position: relative;
+  height: 18px;
+  background: rgba(28, 23, 18, 0.9);
+  border: 1px solid rgba(217, 203, 179, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.pxhp-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(180deg, #b83528 0%, #8a2418 55%, #5a1510 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.35);
+  transition: width 0.3s ease;
+}
+.pxblock-seg {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(106, 143, 163, 0.95),
+    rgba(42, 74, 107, 0.95)
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border-left: 1px dashed rgba(232, 240, 248, 0.5);
+}
+
+.pxchips-row {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.pxchip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  background: rgba(28, 23, 18, 0.8);
+  border: 1px solid rgba(217, 203, 179, 0.2);
+  border-radius: 3px;
+  min-width: 92px;
+}
+.pxchip-ico {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--paper);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.pxchip.gold .pxchip-ico {
+  background: linear-gradient(135deg, #c9a227, #8a6a12);
+}
+.pxchip.energy .pxchip-ico {
+  background: linear-gradient(135deg, #3d6b8c, #1f3a5a);
+}
+.pxchip.deck .pxchip-ico {
+  background: linear-gradient(135deg, #5a3d28, #3a2418);
+}
+.pxchip.thorns .pxchip-ico {
+  background: linear-gradient(135deg, #4a6b3d, #2a4a24);
+}
+.pxchip-val {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.pxchip-val strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--paper);
+  line-height: 1;
+}
+.pxchip.gold .pxchip-val strong {
+  color: var(--gold);
+}
+.pxchip-val small {
+  font-size: 0.7rem;
+  color: rgba(217, 203, 179, 0.55);
+}
+.px-energydots {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.px-energydots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(28, 23, 18, 0.9);
+  border: 2px solid rgba(61, 107, 140, 0.45);
+}
+.px-energydots span.on {
+  background: radial-gradient(circle at 35% 30%, #7ac4e8, #2a6a9a);
+  border-color: #6aa8cc;
+  box-shadow: 0 0 6px rgba(106, 168, 204, 0.7);
+}
+.px-deckmini {
+  display: flex;
+  gap: 4px;
+  margin-top: 1px;
+}
+.px-deckmini span {
+  font-size: 0.65rem;
+  padding: 1px 4px;
+  background: rgba(28, 23, 18, 0.7);
+  border-radius: 2px;
+  color: rgba(217, 203, 179, 0.65);
+}
+.px-deckmini .d-draw {
+  color: rgba(201, 162, 39, 0.85);
+}
+.px-deckmini .d-discard {
+  color: rgba(217, 203, 179, 0.55);
+}
+
+/* --- 战斗舞台 --- */
+.pxbattle-stage {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.6fr;
+  min-height: 360px;
+  padding: 16px 20px;
+  align-items: end;
+}
+
+.pxhero-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.left-panel {
+  padding: 10px 12px;
+  background: rgba(12, 8, 5, 0.72);
+  border: 1px solid rgba(217, 203, 179, 0.2);
+  border-radius: 3px;
+  min-width: 180px;
+}
+.left-panel-head strong {
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+  color: var(--paper);
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 6px;
+}
+.px-state-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.px-state-row .chip {
+  padding: 1px 6px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(217, 203, 179, 0.25);
+  color: var(--paper);
+  background: rgba(28, 23, 18, 0.6);
+}
+.px-state-row .chip.block {
+  color: #8eb4c9;
+}
+.px-state-row .chip.energy {
+  color: #8eb4c9;
+}
+.px-state-row .chip.thorns {
+  color: #8ab88a;
+}
+
+.pxhero-actor,
+.pxenemy-actor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.pxactor-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transform-origin: bottom center;
+}
+.pxactor-wrap.idle {
+  animation: px-bob 1.6s ease-in-out infinite;
+}
+.pxactor-wrap.enemy {
+  transform: scaleX(-1);
+}
+.pxactor-wrap.enemy.idle {
+  animation: px-bob-flip 1.6s ease-in-out infinite;
+}
+@keyframes px-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+@keyframes px-bob-flip {
+  0%,
+  100% {
+    transform: scaleX(-1) translateY(0);
+  }
+  50% {
+    transform: scaleX(-1) translateY(-7px);
+  }
+}
+.pxsheet {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 10px 0 rgba(0, 0, 0, 0.45));
+}
+.pxactor-shadow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 12px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.55), transparent 70%);
+  border-radius: 50%;
+  filter: blur(2px);
+}
+.pxactor-label {
+  margin-top: 6px;
+  padding: 2px 10px;
+  background: rgba(28, 23, 18, 0.85);
+  border: 1px solid rgba(217, 203, 179, 0.2);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: rgba(217, 203, 179, 0.85);
+  border-radius: 2px;
+}
+
+.pxcenter-zone {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 200px;
+}
+.pxshop-btn {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 18px;
+  background: linear-gradient(180deg, #e8c56a, #c9a227 55%, #8a6a12);
+  color: #1c1712;
+  border: 2px solid #7a5a10;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #5a4008, 0 10px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease;
+}
+.pxshop-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 9px 0 #5a4008, 0 14px 26px rgba(0, 0, 0, 0.45);
+}
+.pxshop-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #5a4008;
+}
+.shop-ico {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.shop-text {
+  font-size: 0.95rem;
+}
+.px-rune-circle {
+  position: absolute;
+  width: min(320px, 60%);
+  aspect-ratio: 1 / 0.35;
+  bottom: 6px;
+  border: 1.5px solid rgba(201, 162, 39, 0.32);
+  border-radius: 50%;
+  box-shadow: inset 0 0 24px rgba(201, 162, 39, 0.1),
+    0 0 30px rgba(155, 45, 31, 0.15);
+  pointer-events: none;
+  animation: px-rune-spin 24s linear infinite;
+}
+.px-rune-circle::before,
+.px-rune-circle::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed rgba(201, 162, 39, 0.22);
+  border-radius: 50%;
+}
+.px-rune-circle::after {
+  inset: 28px;
+  border-style: solid;
+  border-color: rgba(155, 45, 31, 0.18);
+}
+@keyframes px-rune-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pxenemies-area {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-end;
+}
+.pxenemy-unit {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 12px;
+  align-items: center;
+  position: relative;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+.pxenemy-unit.targeting {
+  cursor: pointer;
+}
+.pxenemy-unit.targeting:hover,
+.pxenemy-unit.selected {
+  background: rgba(155, 45, 31, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(155, 45, 31, 0.5);
+}
+.pxenemy-unit.elite.targeting:hover,
+.pxenemy-unit.elite.selected {
+  box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.6),
+    0 0 16px rgba(201, 162, 39, 0.18);
+  background: rgba(201, 162, 39, 0.08);
+}
+.pxenemy-state {
+  order: 1;
+  min-width: 210px;
+  padding: 8px 10px;
+  background: rgba(12, 8, 5, 0.78);
+  border: 1px solid rgba(217, 203, 179, 0.18);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pxenemy-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pxbadge {
+  padding: 2px 6px;
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 2px;
+  font-family: var(--font-display);
+}
+.pxbadge.elite {
+  background: #6b4f1f;
+  color: var(--gold);
+}
+.pxbadge.boss {
+  background: var(--blood);
+  color: var(--paper);
+}
+.pxenemy-head strong {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  color: var(--paper);
+}
+.pxintent-row {
+  display: flex;
+}
+.pxintent {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  font-size: 0.78rem;
+  color: rgba(217, 203, 179, 0.8);
+  background: rgba(28, 23, 18, 0.6);
+  border: 1px solid rgba(217, 203, 179, 0.15);
+  border-radius: 2px;
+}
+.pxintent.attack {
+  border-color: rgba(155, 45, 31, 0.45);
+  background: rgba(155, 45, 31, 0.12);
+}
+.pxintent-ico {
+  color: var(--blood);
+  font-size: 0.95rem;
+}
+.pxintent strong {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--blood);
+}
+
+.pxhp-small {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pxhp-small-track {
+  flex: 1;
+  height: 10px;
+  background: rgba(28, 23, 18, 0.9);
+  border: 1px solid rgba(217, 203, 179, 0.18);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.pxhp-small-fill {
+  position: absolute;
+  inset: 0;
+  right: auto;
+  background: linear-gradient(180deg, #b83528, #7a1e14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.pxhp-small-val {
+  font-size: 0.72rem;
+  color: rgba(217, 203, 179, 0.75);
+  font-family: var(--font-display);
+  min-width: 56px;
+  text-align: right;
+}
+
+.px-status-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  min-height: 18px;
+}
+.px-status-row .chip {
+  padding: 1px 5px;
+  font-size: 0.7rem;
+  border: 1px solid rgba(217, 203, 179, 0.2);
+  color: var(--paper);
+  background: rgba(28, 23, 18, 0.55);
+}
+.px-status-row .chip.block {
+  color: #8eb4c9;
+  border-color: rgba(61, 107, 140, 0.4);
+}
+.px-status-row .chip.burn {
+  color: var(--ember);
+  border-color: rgba(196, 92, 38, 0.45);
+}
+.px-status-row .chip.weaken {
+  color: var(--gold);
+  border-color: rgba(201, 162, 39, 0.45);
+}
+
+.pxenemy-actor {
+  order: 2;
+}
+.pxenemy-unit.elite .pxactor-wrap {
+  width: 128px;
+  height: 128px;
+}
+.px-target-ring {
+  position: absolute;
+  inset: -6px;
+  border: 2px dashed var(--blood);
+  border-radius: 50%;
+  animation: px-target-pulse 1s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes px-target-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+/* --- 底部手牌 --- */
+.pxhand-dock {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 14px 24px 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 8, 5, 0.2),
+    rgba(12, 8, 5, 0.94) 45%
+  );
+  border-top: 1px solid rgba(201, 162, 39, 0.18);
+}
+.pxhand-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  max-width: 980px;
+}
+.pxhand-meta {
+  align-self: flex-start;
+  padding-left: 8px;
+}
+.pxhand-count {
+  font-size: 0.78rem;
+  color: rgba(232, 224, 200, 0.72);
+  letter-spacing: 0.08em;
+}
+.pxhand-cards {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 16px 20px 0;
+  min-height: 220px;
+  width: 100%;
+}
+
+.pxcard {
+  position: relative;
+  width: 130px;
+  min-height: 190px;
+  padding: 8px;
+  margin: 0 -3px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  color: var(--paper);
+  border: 2px solid rgba(232, 213, 163, 0.35);
+  background: linear-gradient(165deg, #3a2a22 0%, #1f1712 100%);
+  border-radius: 4px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.pxcard:hover {
+  transform: translateY(-18px) scale(1.04) rotate(0deg) !important;
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(201, 162, 39, 0.6);
+  border-color: var(--gold);
+  z-index: 10;
+}
+.pxcard.type-attack {
+  background: linear-gradient(165deg, #4a241c 0%, #1a1210 100%);
+}
+.pxcard.type-skill {
+  background: linear-gradient(165deg, #1f3a32 0%, #121816 100%);
+}
+.pxcard.playable {
+  border-color: rgba(201, 162, 39, 0.7);
+  box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.32),
+    0 10px 24px rgba(0, 0, 0, 0.45);
+}
+.pxcard:not(.playable) {
+  filter: grayscale(0.45) brightness(0.75);
+}
+.pxcard.ultimate {
+  width: 140px;
+  min-height: 205px;
+  border-color: #c9a227;
+  background: linear-gradient(165deg, #5a3a14 0%, #2a1810 55%, #1a1210 100%);
+  box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.5), 0 12px 28px rgba(0, 0, 0, 0.5),
+    inset 0 0 22px rgba(201, 162, 39, 0.08);
+}
+.pxcard-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pxcard-cost {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #2a4a6b;
+  color: #e8f0f8;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid rgba(232, 240, 248, 0.35);
+}
+.pxcard-stars {
+  color: var(--gold);
+  letter-spacing: 1px;
+  font-size: 0.78rem;
+}
+.pxcard-ultbadge {
+  position: absolute;
+  top: 34px;
+  right: 5px;
+  padding: 1px 5px;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  background: var(--blood);
+  color: var(--paper);
+  border-radius: 2px;
+  box-shadow: 0 2px 5px rgba(155, 45, 31, 0.4);
+}
+.pxcard-name {
+  margin: 10px 0 2px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+.pxcard-ultname {
+  margin: 0 0 4px;
+  color: #e8c56a;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+.pxcard-desc {
+  margin: 0;
+  flex: 1;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: rgba(232, 213, 163, 0.88);
+}
+.pxcard-foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: rgba(232, 213, 163, 0.55);
+}
+
+.pxend-turn {
+  min-width: 130px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  box-shadow: 0 5px 0 #5c180f, 0 8px 18px rgba(0, 0, 0, 0.4);
+  transition: all 0.15s ease;
+}
+.pxend-turn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 #5c180f, 0 12px 24px rgba(0, 0, 0, 0.45);
+}
+.pxend-turn:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #5c180f;
+}
+
+/* --- 说明卡片 --- */
+.arena-layout-note {
+  margin-top: 14px;
+}
+.note-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.note-card h4 {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  color: var(--blood);
+  padding-bottom: 6px;
+  border-bottom: 2px solid rgba(155, 45, 31, 0.3);
+}
+.note-card ul {
+  margin: 0;
+  padding-left: 1.2em;
+  line-height: 1.8;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+.note-card strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+}
+
+@media (max-width: 1100px) {
+  .pxbattle-stage {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .pxhero-area,
+  .pxenemies-area {
+    align-items: center;
+  }
+  .pxenemy-unit {
+    grid-template-columns: 1fr;
+  }
+  .pxenemy-state {
+    order: 2;
+  }
+  .pxenemy-actor {
+    order: 1;
+  }
+  .pxhud-top {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 10px;
+  }
+  .pxhud-center {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+  .pxhud-sub {
+    grid-template-columns: 1fr;
+  }
+  .note-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

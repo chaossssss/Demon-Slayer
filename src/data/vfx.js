@@ -1,10 +1,48 @@
-/** 可复用战斗特效标签（一张牌可以叠多个，不要一牌一条片子） */
+/** 有序列帧素材时优先播帧；否则回退代码粒子 */
 export const VFX_DURATION = {
-  slash: 680,
-  fire: 980,
-  heal: 1100,
-  shield: 900,
-  smoke: 1200,
+  slash: 400,
+  fire: 450,
+  heal: 500,
+  shield: 450,
+  smoke: 480,
+}
+
+/** tag → 帧目录（public 下），帧数与每帧毫秒 */
+export const VFX_SPRITE = {
+  slash: {
+    dir: '/vfx/slash',
+    frames: 8,
+    frameMs: 50,
+    blend: 'screen',
+  },
+  fire: {
+    dir: '/vfx/fire',
+    frames: 8,
+    frameMs: 55,
+    blend: 'screen',
+  },
+  heal: {
+    dir: '/vfx/heal',
+    frames: 8,
+    frameMs: 60,
+    blend: 'screen',
+  },
+  shield: {
+    dir: '/vfx/shield',
+    frames: 8,
+    frameMs: 55,
+    blend: 'screen',
+  },
+  smoke: {
+    dir: '/vfx/smoke',
+    frames: 8,
+    frameMs: 58,
+    blend: 'screen',
+  },
+}
+
+export function getSpriteSpec(tag) {
+  return VFX_SPRITE[tag] || null
 }
 
 /**
@@ -39,7 +77,11 @@ export function getCardVfx(cardId) {
 export function vfxPlayDuration(cardId, star = 1) {
   const spec = getCardVfx(cardId)
   const tags = [...spec.hero, ...spec.targets]
-  const base = tags.reduce((max, tag) => Math.max(max, VFX_DURATION[tag] || 480), 420)
+  const base = tags.reduce((max, tag) => {
+    const sprite = getSpriteSpec(tag)
+    const dur = sprite ? sprite.frames * sprite.frameMs : VFX_DURATION[tag] || 480
+    return Math.max(max, dur)
+  }, 420)
   return Number(star) >= 3 ? Math.round(base * 1.12) : base
 }
 
