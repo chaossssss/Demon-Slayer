@@ -397,7 +397,7 @@ const battleBgKind = computed(() => {
 const battleBgUrl = computed(() => {
   if (battleBgKind.value === 'boss') return '/assets/ui/battle-bg-boss.jpg'
   if (battleBgKind.value === 'elite') return '/assets/ui/battle-bg-elite.jpg'
-  return '/assets/ui/bg-battle.png'
+  return '/assets/ui/bg-battle.jpg'
 })
 const rerollCost = computed(() => 3 + game.floor)
 const totalFloors = FLOORS_TO_WIN
@@ -675,7 +675,7 @@ watch(
   inset: 0;
   z-index: 0;
   background-color: #14100c;
-  background-image: url('/assets/ui/bg-battle.png');
+  background-image: url('/assets/ui/bg-battle.jpg');
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;

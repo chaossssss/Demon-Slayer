@@ -602,7 +602,7 @@ function rerollShop() {
   inset: 0;
   z-index: 0;
   background-color: #14100c;
-  background-image: url('/assets/ui/bg-battle.png');
+  background-image: url('/assets/ui/bg-battle.jpg');
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;
