@@ -1,6 +1,11 @@
 <template>
   <main v-if="ready" class="arena-page">
-    <div class="arena-bg" aria-hidden="true" />
+    <div
+      class="arena-bg"
+      :class="{ elite: battleBgKind === 'elite', boss: battleBgKind === 'boss' }"
+      :style="{ backgroundImage: `url(${battleBgUrl})` }"
+      aria-hidden="true"
+    />
     <div class="petals" aria-hidden="true" />
 
     <header class="hud-top">
@@ -71,7 +76,13 @@
       <div class="hero-cluster">
         <aside class="side-panel hero-panel">
           <div class="panel-head">
-            <strong>{{ heroLabel }}</strong>
+            <div class="status-portrait" aria-hidden="true">
+              <img v-if="heroArt" :src="heroArt" alt="" />
+              <span v-else class="portrait-fallback">{{ heroInitial }}</span>
+            </div>
+            <div class="panel-head-text">
+              <strong>{{ heroLabel }}</strong>
+            </div>
           </div>
           <div class="meter">
             <div class="meter-label">
@@ -112,26 +123,32 @@
             :disabled="e.hp <= 0 || fxLocked"
             @click="onEnemyClick(e)"
           >
-            <div class="enemy-head">
-              <span class="badge" :class="{ elite: e.elite, boss: e.boss }">
-                {{ e.boss ? 'BOSS' : e.elite ? '精英' : '妖鬼' }}
-              </span>
-              <strong>{{ e.name }}</strong>
-              <span class="intent">{{ intentLabel(e) }}</span>
+            <div class="status-portrait sm flip" aria-hidden="true">
+              <img v-if="enemyArt(e)" :src="enemyArt(e)" alt="" />
+              <span v-else class="portrait-fallback">{{ (e.name || '?').slice(0, 1) }}</span>
             </div>
-            <div class="meter">
-              <div class="meter-label">
-                <span>生命</span>
-                <span>{{ e.hp }} / {{ e.maxHp }}</span>
+            <div class="enemy-row-body">
+              <div class="enemy-head">
+                <span class="badge" :class="{ elite: e.elite, boss: e.boss }">
+                  {{ e.boss ? 'BOSS' : e.elite ? '精英' : '妖鬼' }}
+                </span>
+                <strong>{{ e.name }}</strong>
+                <span class="intent">{{ intentLabel(e) }}</span>
               </div>
-              <div class="bar-track">
-                <div class="bar-fill hp" :style="{ width: hpPct(e) + '%' }" />
+              <div class="meter">
+                <div class="meter-label">
+                  <span>生命</span>
+                  <span>{{ e.hp }} / {{ e.maxHp }}</span>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill hp" :style="{ width: hpPct(e) + '%' }" />
+                </div>
               </div>
-            </div>
-            <div class="status-icons">
-              <span v-if="e.block" class="chip block">甲 {{ e.block }}</span>
-              <span v-if="e.burnStacks" class="chip burn">灼 {{ e.burnStacks }}</span>
-              <span v-if="e.weaken" class="chip weaken">弱 {{ e.weaken }}</span>
+              <div class="status-icons">
+                <span v-if="e.block" class="chip block">甲 {{ e.block }}</span>
+                <span v-if="e.burnStacks" class="chip burn">灼 {{ e.burnStacks }}</span>
+                <span v-if="e.weaken" class="chip weaken">弱 {{ e.weaken }}</span>
+              </div>
             </div>
           </button>
         </template>
@@ -342,7 +359,7 @@ import TreasurePick from '@/components/TreasurePick.vue'
 import PixelActor from '@/components/PixelActor.vue'
 import VfxHost from '@/components/VfxHost.vue'
 import { CARD_POOL, FLOORS_TO_WIN, getCardDesc, getCardTargetCount } from '@/data/gameData'
-import { classActorKind } from '@/data/actorSprites'
+import { classActorKind, getActorArt, resolveActorKind } from '@/data/actorSprites'
 import { getCardVfx, getCardActorAnim, vfxImpactDelay, vfxPlayDuration } from '@/data/vfx'
 
 const game = useGameStore()
@@ -361,6 +378,8 @@ let fxSeq = 1
 
 const heroSize = 168
 const heroKind = computed(() => classActorKind(game.classId))
+const heroArt = computed(() => getActorArt(heroKind.value))
+const heroInitial = computed(() => (game.classInfo?.name || '斩').slice(0, 1))
 const heroLabel = computed(() => {
   const cls = game.classInfo
   return cls ? `${cls.name} · ${cls.title}` : '斩鬼'
@@ -368,6 +387,18 @@ const heroLabel = computed(() => {
 
 const targeting = computed(() => !!game.pendingCardUid && game.phase === 'combat')
 const playerHpPct = computed(() => Math.max(0, Math.min(100, (game.hp / game.maxHp) * 100)))
+const isEliteBattle = computed(() => game.enemies.some((e) => e.elite && !e.boss))
+const isBossBattle = computed(() => game.enemies.some((e) => e.boss))
+const battleBgKind = computed(() => {
+  if (isBossBattle.value) return 'boss'
+  if (isEliteBattle.value) return 'elite'
+  return 'normal'
+})
+const battleBgUrl = computed(() => {
+  if (battleBgKind.value === 'boss') return '/assets/ui/battle-bg-boss.jpg'
+  if (battleBgKind.value === 'elite') return '/assets/ui/battle-bg-elite.jpg'
+  return '/assets/ui/bg-battle.png'
+})
 const rerollCost = computed(() => 3 + game.floor)
 const totalFloors = FLOORS_TO_WIN
 const floorProgressPct = computed(() => {
@@ -430,6 +461,10 @@ function enemySize(e) {
 function hpPct(e) {
   if (!e?.maxHp) return 0
   return Math.max(0, Math.min(100, (e.hp / e.maxHp) * 100))
+}
+
+function enemyArt(e) {
+  return getActorArt(resolveActorKind(e.kind || e.id, 'imp'))
 }
 
 function intentLabel(e) {
@@ -646,6 +681,14 @@ watch(
   background-repeat: no-repeat;
 }
 
+.arena-bg.elite {
+  background-color: #12081a;
+}
+
+.arena-bg.boss {
+  background-color: #140608;
+}
+
 .arena-bg::after {
   content: '';
   position: absolute;
@@ -654,6 +697,18 @@ watch(
     linear-gradient(180deg, rgba(8, 5, 3, 0.42) 0%, transparent 18%, transparent 72%, rgba(8, 5, 3, 0.5) 100%),
     radial-gradient(ellipse 92% 72% at 50% 50%, transparent 36%, rgba(8, 5, 3, 0.38) 100%);
   pointer-events: none;
+}
+
+.arena-bg.elite::after {
+  background:
+    linear-gradient(180deg, rgba(10, 4, 16, 0.5) 0%, transparent 20%, transparent 68%, rgba(8, 3, 12, 0.58) 100%),
+    radial-gradient(ellipse 90% 70% at 50% 55%, transparent 34%, rgba(6, 2, 12, 0.42) 100%);
+}
+
+.arena-bg.boss::after {
+  background:
+    linear-gradient(180deg, rgba(18, 4, 6, 0.52) 0%, transparent 18%, transparent 66%, rgba(10, 2, 4, 0.62) 100%),
+    radial-gradient(ellipse 88% 68% at 50% 52%, transparent 32%, rgba(12, 2, 4, 0.46) 100%);
 }
 
 .petals {
@@ -1033,20 +1088,92 @@ watch(
 }
 
 .panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 8px;
   font-family: var(--font-display);
   letter-spacing: 0.1em;
 }
 
+.panel-head-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.panel-head-text strong {
+  display: block;
+  line-height: 1.25;
+  word-break: keep-all;
+}
+
+.status-portrait {
+  position: relative;
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border: 1px solid rgba(201, 162, 39, 0.45);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(90, 50, 28, 0.55), transparent 62%),
+    rgba(8, 6, 4, 0.92);
+  box-shadow:
+    inset 0 0 0 1px rgba(28, 23, 18, 0.65),
+    0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.status-portrait.sm {
+  width: 44px;
+  height: 44px;
+}
+
+.status-portrait img {
+  display: block;
+  width: 148%;
+  height: 148%;
+  margin: -8% 0 0 -24%;
+  object-fit: cover;
+  object-position: center 8%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+  pointer-events: none;
+}
+
+.status-portrait.flip img {
+  transform: scaleX(-1);
+  margin-left: -24%;
+}
+
+.portrait-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+}
+
 .enemy-row {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
   padding: 6px;
   background: none;
   color: inherit;
   text-align: left;
   border: 1px solid transparent;
+}
+
+.enemy-row-body {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .enemy-row.targeting {
