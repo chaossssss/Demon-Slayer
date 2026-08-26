@@ -15,6 +15,12 @@ import {
 } from '@/data/gameData'
 import { useProgressStore } from './progress'
 import { enemyActorKind } from '@/data/actorSprites'
+import {
+  TREASURE_POOL,
+  aggregateTreasureEffects,
+  getTreasure,
+  rollTreasureOffers,
+} from '@/data/treasures'
 
 let uid = 1
 let shopSeq = 1

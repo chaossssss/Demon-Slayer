@@ -3,7 +3,10 @@
     <header class="top fade-up">
       <div class="top-nav">
         <RouterLink class="back" to="/">← 返回</RouterLink>
-        <RouterLink class="back" to="/arena">像素战场预览</RouterLink>
+        <div class="top-links">
+          <RouterLink class="back" to="/arena">像素预览</RouterLink>
+          <RouterLink class="back" to="/battle">旧战斗界面</RouterLink>
+        </div>
       </div>
       <h1 class="brand">选择职业</h1>
       <p>最初只有剑士可出征，其余职业随战绩解锁。</p>
@@ -96,7 +99,7 @@ function statsOf(cls) {
 function start() {
   if (!selected.value) return
   game.startRun(selected.value)
-  router.push('/battle')
+  router.push('/field')
 }
 </script>
 
@@ -115,6 +118,12 @@ function start() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+
+.top-links {
+  display: flex;
+  gap: 14px;
 }
 
 .back {
