@@ -288,12 +288,15 @@
 
               <div class="pxhud-center">
                 <div class="px-floornav">
+                  <div class="px-floortrack" aria-hidden="true">
+                    <div class="px-floorfill" style="width: 66.67%"></div>
+                  </div>
                   <div
                     v-for="n in 10"
                     :key="'pxf' + n"
                     class="px-fnode"
                     :class="{
-                      passed: n <= 7,
+                      passed: n < 7,
                       current: n === 7,
                       elite: n % 3 === 0,
                       boss: n === 10,
@@ -301,7 +304,6 @@
                   >
                     <span>{{ n === 10 ? "王" : n % 3 === 0 ? "精" : n }}</span>
                   </div>
-                  <div class="px-floorline" style="width: 65%"></div>
                 </div>
               </div>
 
@@ -5251,75 +5253,106 @@ onMounted(() => {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  max-width: 480px;
+  justify-content: space-between;
+  gap: 0;
+  padding: 10px 8px;
+  max-width: 520px;
   width: 100%;
+}
+.px-floortrack {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background: rgba(217, 203, 179, 0.14);
+  z-index: 1;
+  border-radius: 1px;
+  pointer-events: none;
+}
+.px-floorfill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(61, 107, 79, 0.9),
+    rgba(201, 162, 39, 0.75)
+  );
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(201, 162, 39, 0.28);
 }
 .px-fnode {
   position: relative;
   z-index: 2;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   font-family: var(--font-display);
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  color: rgba(217, 203, 179, 0.4);
-  background: rgba(28, 23, 18, 0.7);
-  border: 2px solid rgba(217, 203, 179, 0.18);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: rgba(217, 203, 179, 0.38);
+  background: rgba(18, 13, 10, 0.88);
+  border: 1.5px solid rgba(217, 203, 179, 0.2);
   border-radius: 50%;
   flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 .px-fnode.passed {
-  color: var(--paper);
-  background: rgba(61, 107, 79, 0.35);
-  border-color: rgba(61, 107, 79, 0.6);
+  color: rgba(236, 224, 200, 0.92);
+  background: rgba(45, 78, 58, 0.72);
+  border-color: rgba(90, 140, 110, 0.75);
 }
 .px-fnode.current {
+  width: 34px;
+  height: 34px;
   color: var(--paper);
-  background: var(--blood);
-  border-color: var(--gold);
-  box-shadow: 0 0 12px rgba(155, 45, 31, 0.7), 0 0 24px rgba(201, 162, 39, 0.35);
-  transform: scale(1.12);
+  background: linear-gradient(160deg, #c45c3a 0%, #9b2d1f 70%);
+  border: 2px solid var(--gold);
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.25),
+    0 0 14px rgba(155, 45, 31, 0.55);
+  transform: none;
+  font-weight: 700;
 }
 .px-fnode.elite {
-  border-color: rgba(201, 162, 39, 0.6);
+  border-color: rgba(201, 162, 39, 0.55);
   color: var(--gold);
+  background: rgba(18, 13, 10, 0.92);
 }
 .px-fnode.elite.passed {
-  background: rgba(201, 162, 39, 0.25);
+  color: #e8d08a;
+  background: rgba(90, 70, 24, 0.55);
+  border-color: rgba(201, 162, 39, 0.7);
+}
+.px-fnode.elite.current {
+  color: var(--paper);
+  background: linear-gradient(160deg, #c45c3a 0%, #9b2d1f 70%);
+  border-color: var(--gold);
 }
 .px-fnode.boss {
-  border-color: var(--blood);
+  width: 32px;
+  height: 32px;
+  border-color: rgba(155, 45, 31, 0.75);
+  color: #e8b4a8;
+  background: rgba(40, 14, 12, 0.9);
+  animation: px-boss-pulse 2s ease-in-out infinite;
+}
+.px-fnode.boss.current {
+  width: 34px;
+  height: 34px;
   color: var(--paper);
-  width: 36px;
-  height: 36px;
-  animation: px-boss-pulse 1.8s ease-in-out infinite;
+  background: linear-gradient(160deg, #c45c3a 0%, #9b2d1f 70%);
+  border-color: var(--gold);
 }
 @keyframes px-boss-pulse {
   0%,
   100% {
-    box-shadow: 0 0 8px rgba(155, 45, 31, 0.5);
+    box-shadow: 0 0 6px rgba(155, 45, 31, 0.35);
   }
   50% {
-    box-shadow: 0 0 20px rgba(155, 45, 31, 0.9), 0 0 30px rgba(155, 45, 31, 0.4);
+    box-shadow: 0 0 14px rgba(155, 45, 31, 0.7);
   }
-}
-.px-floorline {
-  position: absolute;
-  left: 28px;
-  top: 50%;
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    rgba(61, 107, 79, 0.8),
-    rgba(201, 162, 39, 0.6)
-  );
-  transform: translateY(-50%);
-  z-index: 1;
-  border-radius: 2px;
 }
 
 .pxhud-right {
@@ -5498,76 +5531,89 @@ onMounted(() => {
   gap: 10px;
   justify-content: flex-end;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: stretch;
 }
 .pxchip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 10px 4px 4px;
-  background: rgba(28, 23, 18, 0.8);
-  border: 1px solid rgba(217, 203, 179, 0.2);
-  border-radius: 3px;
-  min-width: 92px;
+  gap: 10px;
+  padding: 7px 12px 7px 7px;
+  background: rgba(16, 11, 8, 0.82);
+  border: 1px solid rgba(217, 203, 179, 0.22);
+  border-radius: 4px;
+  min-width: 108px;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 .pxchip-ico {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   color: var(--paper);
-  border-radius: 2px;
+  border-radius: 3px;
   flex-shrink: 0;
+  letter-spacing: 0.04em;
 }
 .pxchip.gold .pxchip-ico {
-  background: linear-gradient(135deg, #c9a227, #8a6a12);
+  background: linear-gradient(145deg, #d4b03a, #8a6a12);
+  color: #1c1712;
+  text-shadow: none;
 }
 .pxchip.energy .pxchip-ico {
-  background: linear-gradient(135deg, #3d6b8c, #1f3a5a);
+  background: linear-gradient(145deg, #4a88b0, #1f3a5a);
 }
 .pxchip.deck .pxchip-ico {
-  background: linear-gradient(135deg, #5a3d28, #3a2418);
+  background: linear-gradient(145deg, #6a4a32, #3a2418);
 }
 .pxchip.thorns .pxchip-ico {
-  background: linear-gradient(135deg, #4a6b3d, #2a4a24);
+  background: linear-gradient(145deg, #5a7a48, #2a4a24);
 }
 .pxchip-val {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
 }
 .pxchip-val strong {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 1.12rem;
   color: var(--paper);
   line-height: 1;
+  letter-spacing: 0.02em;
 }
 .pxchip.gold .pxchip-val strong {
   color: var(--gold);
 }
 .pxchip-val small {
-  font-size: 0.7rem;
-  color: rgba(217, 203, 179, 0.55);
+  font-size: 0.72rem;
+  line-height: 1.1;
+  color: rgba(217, 203, 179, 0.62);
+  white-space: nowrap;
 }
 .px-energydots {
   display: flex;
-  gap: 4px;
-  margin-bottom: 2px;
+  align-items: center;
+  gap: 5px;
+  height: 12px;
 }
 .px-energydots span {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  background: rgba(28, 23, 18, 0.9);
-  border: 2px solid rgba(61, 107, 140, 0.45);
+  background: rgba(12, 8, 5, 0.95);
+  border: 1.5px solid rgba(90, 130, 160, 0.4);
+  box-sizing: border-box;
 }
 .px-energydots span.on {
-  background: radial-gradient(circle at 35% 30%, #7ac4e8, #2a6a9a);
-  border-color: #6aa8cc;
-  box-shadow: 0 0 6px rgba(106, 168, 204, 0.7);
+  background: radial-gradient(circle at 35% 30%, #9ad4f0, #2a6a9a 70%);
+  border-color: #7ab8d8;
+  box-shadow: 0 0 7px rgba(106, 168, 204, 0.65);
 }
 .px-deckmini {
   display: flex;

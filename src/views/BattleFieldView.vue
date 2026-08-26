@@ -5,11 +5,55 @@
 
     <header class="hud-top">
       <RouterLink class="nav-link" to="/class">← 返回</RouterLink>
-      <span class="meta">第 {{ game.floor }} 层 · 回合 {{ game.turn }}</span>
+      <div class="hud-floorblock">
+        <span class="meta">第 {{ game.floor }} / {{ totalFloors }} 层 · 回合 {{ game.turn }}</span>
+        <div class="px-floornav" aria-label="层数进度">
+          <div class="px-floortrack" aria-hidden="true">
+            <div class="px-floorfill" :style="{ width: floorProgressPct + '%' }"></div>
+          </div>
+          <div
+            v-for="n in totalFloors"
+            :key="'f' + n"
+            class="px-fnode"
+            :class="{
+              passed: n < game.floor,
+              current: n === game.floor,
+              elite: n % 3 === 0 && n !== totalFloors,
+              boss: n === totalFloors,
+            }"
+          >
+            <span>{{ n === totalFloors ? '王' : n % 3 === 0 ? '精' : n }}</span>
+          </div>
+        </div>
+      </div>
       <div class="hud-chips">
-        <span class="chip gold">金 {{ game.gold }} <small>+{{ incomePreview }}</small></span>
-        <span class="chip energy">能 {{ game.energy }} / {{ game.maxEnergy }}</span>
-        <span class="chip">牌 {{ game.deck.length }}</span>
+        <div class="pxchip gold">
+          <div class="pxchip-ico">金</div>
+          <div class="pxchip-val">
+            <strong>{{ game.gold }}</strong>
+            <small>+{{ incomePreview }}/回合</small>
+          </div>
+        </div>
+        <div class="pxchip energy">
+          <div class="pxchip-ico">能</div>
+          <div class="pxchip-val">
+            <div class="px-energydots" aria-hidden="true">
+              <span
+                v-for="i in game.maxEnergy"
+                :key="'e' + i"
+                :class="{ on: i <= game.energy }"
+              />
+            </div>
+            <small>{{ game.energy }} / {{ game.maxEnergy }}</small>
+          </div>
+        </div>
+        <div class="pxchip deck">
+          <div class="pxchip-ico">牌</div>
+          <div class="pxchip-val">
+            <strong>{{ game.deck.length }}</strong>
+            <small>卡组</small>
+          </div>
+        </div>
       </div>
       <RelicBar :treasures="game.ownedTreasures" />
       <aside class="combat-log" :class="{ collapsed: logCollapsed }">
@@ -286,7 +330,7 @@ import MergeModal from '@/components/MergeModal.vue'
 import TreasurePick from '@/components/TreasurePick.vue'
 import PixelActor from '@/components/PixelActor.vue'
 import VfxHost from '@/components/VfxHost.vue'
-import { CARD_POOL, getCardDesc, getCardTargetCount } from '@/data/gameData'
+import { CARD_POOL, FLOORS_TO_WIN, getCardDesc, getCardTargetCount } from '@/data/gameData'
 import { classActorKind } from '@/data/actorSprites'
 import { getCardVfx, vfxImpactDelay, vfxPlayDuration } from '@/data/vfx'
 
@@ -312,6 +356,12 @@ const heroLabel = computed(() => {
 const targeting = computed(() => !!game.pendingCardUid && game.phase === 'combat')
 const playerHpPct = computed(() => Math.max(0, Math.min(100, (game.hp / game.maxHp) * 100)))
 const rerollCost = computed(() => 3 + game.floor)
+const totalFloors = FLOORS_TO_WIN
+const floorProgressPct = computed(() => {
+  if (totalFloors <= 1) return 100
+  const step = Math.max(0, Math.min(game.floor - 1, totalFloors - 1))
+  return (step / (totalFloors - 1)) * 100
+})
 
 const incomePreview = computed(() => {
   const mods = game.relicMods
@@ -608,12 +658,209 @@ watch(
   letter-spacing: 0.08em;
   color: rgba(217, 203, 179, 0.82);
   white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+.hud-floorblock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 320px;
+  max-width: 520px;
+}
+
+.px-floornav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0;
+  padding: 4px 2px;
+  width: 100%;
+}
+
+.px-floortrack {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background: rgba(217, 203, 179, 0.14);
+  z-index: 1;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.px-floorfill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(61, 107, 79, 0.9), rgba(201, 162, 39, 0.75));
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(201, 162, 39, 0.28);
+}
+
+.px-fnode {
+  position: relative;
+  z-index: 2;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: rgba(217, 203, 179, 0.38);
+  background: rgba(18, 13, 10, 0.88);
+  border: 1.5px solid rgba(217, 203, 179, 0.2);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.px-fnode.passed {
+  color: rgba(236, 224, 200, 0.92);
+  background: rgba(45, 78, 58, 0.72);
+  border-color: rgba(90, 140, 110, 0.75);
+}
+
+.px-fnode.current {
+  width: 30px;
+  height: 30px;
+  color: var(--paper);
+  background: linear-gradient(160deg, #c45c3a 0%, #9b2d1f 70%);
+  border: 2px solid var(--gold);
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.25),
+    0 0 12px rgba(155, 45, 31, 0.5);
+  font-weight: 700;
+}
+
+.px-fnode.elite {
+  border-color: rgba(201, 162, 39, 0.55);
+  color: var(--gold);
+  background: rgba(18, 13, 10, 0.92);
+}
+
+.px-fnode.elite.passed {
+  color: #e8d08a;
+  background: rgba(90, 70, 24, 0.55);
+  border-color: rgba(201, 162, 39, 0.7);
+}
+
+.px-fnode.elite.current {
+  color: var(--paper);
+  background: linear-gradient(160deg, #c45c3a 0%, #9b2d1f 70%);
+  border-color: var(--gold);
+}
+
+.px-fnode.boss {
+  width: 28px;
+  height: 28px;
+  border-color: rgba(155, 45, 31, 0.75);
+  color: #e8b4a8;
+  background: rgba(40, 14, 12, 0.9);
+}
+
+.px-fnode.boss.current {
+  width: 30px;
+  height: 30px;
+  color: var(--paper);
+  background: linear-gradient(160deg, #c45c3a 0%, #9b2d1f 70%);
+  border-color: var(--gold);
 }
 
 .hud-chips {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+  align-items: stretch;
+}
+
+.pxchip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 6px;
+  background: rgba(16, 11, 8, 0.82);
+  border: 1px solid rgba(217, 203, 179, 0.22);
+  border-radius: 4px;
+  min-width: 96px;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.pxchip-ico {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--paper);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.pxchip.gold .pxchip-ico {
+  background: linear-gradient(145deg, #d4b03a, #8a6a12);
+  color: #1c1712;
+}
+
+.pxchip.energy .pxchip-ico {
+  background: linear-gradient(145deg, #4a88b0, #1f3a5a);
+}
+
+.pxchip.deck .pxchip-ico {
+  background: linear-gradient(145deg, #6a4a32, #3a2418);
+}
+
+.pxchip-val {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pxchip-val strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--paper);
+  line-height: 1;
+}
+
+.pxchip.gold .pxchip-val strong {
+  color: var(--gold);
+}
+
+.pxchip-val small {
+  font-size: 0.68rem;
+  line-height: 1.1;
+  color: rgba(217, 203, 179, 0.62);
+  white-space: nowrap;
+}
+
+.px-energydots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 11px;
+}
+
+.px-energydots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(12, 8, 5, 0.95);
+  border: 1.5px solid rgba(90, 130, 160, 0.4);
+  box-sizing: border-box;
+}
+
+.px-energydots span.on {
+  background: radial-gradient(circle at 35% 30%, #9ad4f0, #2a6a9a 70%);
+  border-color: #7ab8d8;
+  box-shadow: 0 0 6px rgba(106, 168, 204, 0.65);
 }
 
 .hud-top :deep(.relic-bar) {
@@ -923,10 +1170,6 @@ watch(
 
 .chip.weaken {
   color: #c9a227;
-}
-
-.hud-chips .chip small {
-  color: rgba(217, 203, 179, 0.55);
 }
 
 .enemy-unit.targeting {
