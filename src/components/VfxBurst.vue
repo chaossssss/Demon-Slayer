@@ -13,7 +13,7 @@
 
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { getSpriteSpec, VFX_DURATION } from '@/data/vfx'
+import { getSpriteSpec, resolveVfxTag, VFX_DURATION } from '@/data/vfx'
 import { createFxWorld, drawFxWorld, stepFxWorld } from '@/data/vfxEngine'
 
 const props = defineProps({
@@ -33,10 +33,12 @@ let world = null
 let last = 0
 let frameIndex = 0
 let spriteSpec = null
+let playTag = ''
 
 onMounted(async () => {
   running = true
-  spriteSpec = getSpriteSpec(props.tag)
+  playTag = resolveVfxTag(props.tag, props.ult)
+  spriteSpec = getSpriteSpec(playTag)
   if (spriteSpec) {
     await playSprite(spriteSpec)
     return

@@ -173,11 +173,11 @@ const treasures = [TREASURE_POOL.copper_coin, TREASURE_POOL.wooden_amulet, TREAS
 
 const floor = 3
 const maxHp = 70
-const maxEnergy = 3
+const maxEnergy = 12
 const hp = ref(62)
 const block = ref(6)
 const gold = ref(48)
-const energy = ref(3)
+const energy = ref(12)
 const turn = ref(2)
 const locked = ref(false)
 const shopOpen = ref(false)
@@ -227,13 +227,25 @@ function makeOffer(cardId, price) {
 const hand = ref([
   makeCard('slash'),
   makeCard('slash', 3),
+  makeCard('stab'),
+  makeCard('whirlwind'),
+  makeCard('heavy_slash'),
+  makeCard('bash'),
+  makeCard('ember'),
+  makeCard('ember', 3),
   makeCard('guard'),
   makeCard('heal_potion'),
-  makeCard('ember'),
+  makeCard('mana_surge'),
   makeCard('smoke'),
+  makeCard('smoke', 3),
 ])
 
-const shop = ref([makeOffer('stab', 17), makeOffer('ward', 17), makeOffer('focus_strike', 32)])
+const shop = ref([
+  makeOffer('execute', 22),
+  makeOffer('ward', 17),
+  makeOffer('focus_strike', 32),
+  makeOffer('inferno', 40),
+])
 
 const enemies = ref([
   {
