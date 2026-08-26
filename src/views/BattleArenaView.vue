@@ -27,7 +27,21 @@
       <div class="hero-cluster">
         <aside class="side-panel hero-panel">
           <div class="panel-head">
-            <strong>剑士 · 破晓斩</strong>
+            <strong>{{ heroLabel }}</strong>
+          </div>
+          <div class="class-switch" role="group" aria-label="切换职业预览">
+            <button
+              v-for="cls in classOptions"
+              :key="cls.id"
+              type="button"
+              class="class-pill"
+              :class="{ active: heroClass === cls.id }"
+              :style="{ '--pill': cls.color }"
+              :title="cls.name"
+              @click="heroClass = cls.id"
+            >
+              {{ cls.short }}
+            </button>
           </div>
           <div class="meter">
             <div class="meter-label">
@@ -87,7 +101,7 @@
       <div class="rune" aria-hidden="true" />
 
       <div class="hero-slot" :class="{ busy: locked }">
-        <PixelActor kind="swordsman" :anim="heroAnim" :size="120" />
+        <PixelActor :kind="heroKind" :anim="heroAnim" :size="heroSize" />
         <VfxHost :items="heroFx" facing="right" @ended="onHeroFxEnded" />
       </div>
 
@@ -105,7 +119,7 @@
           :disabled="e.hp <= 0 || locked"
           @click="onEnemyClick(e)"
         >
-          <PixelActor :kind="e.kind" :anim="e.anim" :size="e.elite || e.boss ? 112 : 92" />
+          <PixelActor :kind="e.kind" :anim="e.anim" :size="enemySize(e)" />
           <VfxHost :items="e.fx" facing="right" @ended="onEnemyFxEnded(e, $event)" />
         </button>
       </div>
@@ -165,7 +179,8 @@ import ShopPanel from '@/components/ShopPanel.vue'
 import GameCard from '@/components/GameCard.vue'
 import PixelActor from '@/components/PixelActor.vue'
 import VfxHost from '@/components/VfxHost.vue'
-import { CARD_POOL, getCardDesc, getCardTargetCount } from '@/data/gameData'
+import { CARD_POOL, CLASSES, getCardDesc, getCardTargetCount } from '@/data/gameData'
+import { classActorKind } from '@/data/actorSprites'
 import { TREASURE_POOL } from '@/data/treasures'
 import { getCardVfx, vfxImpactDelay, vfxPlayDuration } from '@/data/vfx'
 
@@ -187,14 +202,35 @@ const pendingUid = ref(null)
 const selectedIds = ref([])
 const heroAnim = ref('idle')
 const heroFx = ref([])
+const heroClass = ref('swordsman')
+const classOptions = Object.values(CLASSES).map((cls) => ({
+  id: cls.id,
+  name: cls.name,
+  short: cls.name.slice(0, 1),
+  color: cls.color,
+}))
+const heroKind = computed(() => classActorKind(heroClass.value))
+const heroLabel = computed(() => {
+  const cls = CLASSES[heroClass.value]
+  return cls ? `${cls.name} · ${cls.title}` : '剑士 · 破晓斩'
+})
 let fxSeq = 1
 let logSeq = 1
 const log = ref([
-  { id: logSeq++, msg: '第 3 层 · 小鬼与血犬拦路。' },
-  { id: logSeq++, msg: '布局预览：点卡出招，结束回合后市集会自动打开。' },
+  { id: logSeq++, msg: '第 3 层 · 六类鬼怪列阵预览。' },
+  { id: logSeq++, msg: '布局预览：可切换职业与出招，观察像素角色与特效。' },
 ])
 
+const heroSize = 168
+
+function enemySize(e) {
+  if (e.boss) return 168
+  if (e.elite) return 144
+  return 116
+}
+
 let cardSeq = 1
+
 function makeCard(cardId, star = 1) {
   const tpl = CARD_POOL[cardId]
   return {
@@ -282,6 +318,38 @@ const enemies = ref([
   },
   {
     uid: 'e3',
+    name: '蛮鬼',
+    kind: 'brute',
+    hp: 42,
+    maxHp: 48,
+    damage: 10,
+    intent: 'attack',
+    block: 8,
+    burnStacks: 0,
+    weaken: 0,
+    elite: false,
+    boss: false,
+    anim: 'idle',
+    fx: [],
+  },
+  {
+    uid: 'e4',
+    name: '咒鬼',
+    kind: 'shaman',
+    hp: 30,
+    maxHp: 36,
+    damage: 7,
+    intent: 'burn',
+    block: 0,
+    burnStacks: 0,
+    weaken: 0,
+    elite: false,
+    boss: false,
+    anim: 'idle',
+    fx: [],
+  },
+  {
+    uid: 'e5',
     name: '鬼将',
     kind: 'elite',
     hp: 70,
@@ -293,6 +361,22 @@ const enemies = ref([
     weaken: 0,
     elite: true,
     boss: false,
+    anim: 'idle',
+    fx: [],
+  },
+  {
+    uid: 'e6',
+    name: '百目鬼王',
+    kind: 'boss',
+    hp: 96,
+    maxHp: 120,
+    damage: 16,
+    intent: 'attack',
+    block: 6,
+    burnStacks: 0,
+    weaken: 0,
+    elite: false,
+    boss: true,
     anim: 'idle',
     fx: [],
   },
@@ -517,17 +601,20 @@ function rerollShop() {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background:
-    radial-gradient(ellipse 70% 50% at 50% 18%, rgba(155, 45, 31, 0.18), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(61, 107, 79, 0.12), transparent 50%),
-    linear-gradient(180deg, #1a1410 0%, #2a2118 42%, #3a2a1c 58%, #1c140e 100%);
+  background-color: #14100c;
+  background-image: url('/assets/ui/bg-battle.png');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 .arena-bg::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 90% 70% at 50% 50%, transparent 40%, rgba(8, 5, 3, 0.55) 100%);
+  background:
+    linear-gradient(180deg, rgba(8, 5, 3, 0.42) 0%, transparent 18%, transparent 72%, rgba(8, 5, 3, 0.5) 100%),
+    radial-gradient(ellipse 92% 72% at 50% 50%, transparent 36%, rgba(8, 5, 3, 0.38) 100%);
   pointer-events: none;
 }
 
@@ -542,7 +629,7 @@ function rerollShop() {
   background-size: 180px 180px, 260px 260px;
   background-position: 0 0, 80px 40px;
   animation: drift 18s linear infinite;
-  opacity: 0.35;
+  opacity: 0.12;
 }
 
 .hud-top {
@@ -678,7 +765,7 @@ function rerollShop() {
 .stage {
   position: relative;
   z-index: 2;
-  min-height: min(46vh, 420px);
+  min-height: min(52vh, 480px);
   margin-top: 8px;
   padding: 12px 220px 36px;
 }
@@ -714,6 +801,36 @@ function rerollShop() {
   margin-bottom: 8px;
   font-family: var(--font-display);
   letter-spacing: 0.1em;
+}
+
+.class-switch {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.class-pill {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  border: 1px solid rgba(217, 203, 179, 0.2);
+  background: rgba(12, 8, 5, 0.55);
+  color: rgba(217, 203, 179, 0.75);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.class-pill.active {
+  border-color: var(--pill, var(--gold));
+  color: var(--paper);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pill, var(--gold)) 45%, transparent);
+}
+
+.class-pill:hover:not(.active) {
+  border-color: rgba(217, 203, 179, 0.45);
+  color: var(--paper);
 }
 
 .enemy-row {
@@ -769,20 +886,20 @@ function rerollShop() {
 
 .hero-slot {
   position: absolute;
-  left: 320px;
-  bottom: 28px;
-  width: 120px;
-  height: 120px;
+  left: 300px;
+  bottom: 20px;
+  width: 168px;
+  height: 168px;
   overflow: visible;
 }
 
 .enemy-sprites {
   position: absolute;
-  right: 250px;
-  bottom: 28px;
+  right: 200px;
+  bottom: 20px;
   display: flex;
   align-items: flex-end;
-  gap: 18px;
+  gap: 10px;
 }
 
 .enemy-head {

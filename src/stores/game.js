@@ -14,12 +14,7 @@ import {
   scaleStats,
 } from '@/data/gameData'
 import { useProgressStore } from './progress'
-import {
-  TREASURE_POOL,
-  aggregateTreasureEffects,
-  getTreasure,
-  rollTreasureOffers,
-} from '@/data/treasures'
+import { enemyActorKind } from '@/data/actorSprites'
 
 let uid = 1
 let shopSeq = 1
@@ -97,6 +92,7 @@ function makeEnemy(floor, opts = {}) {
   return {
     uid: nextEnemyId(),
     id: t.id,
+    kind: enemyActorKind(t.id),
     name: isBoss ? t.name : `${t.name}`,
     maxHp,
     hp: maxHp,

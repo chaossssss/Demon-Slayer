@@ -5,6 +5,7 @@
       class="fx-sprite"
       :class="{ flip: facing === 'left' }"
       :src="spriteUrl"
+      :style="spriteStyle"
       alt=""
     />
     <canvas v-else ref="canvasEl" class="fx-canvas" />
@@ -12,7 +13,7 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { getSpriteSpec, resolveVfxTag, VFX_DURATION } from '@/data/vfx'
 import { createFxWorld, drawFxWorld, stepFxWorld } from '@/data/vfxEngine'
 
@@ -34,6 +35,12 @@ let last = 0
 let frameIndex = 0
 let spriteSpec = null
 let playTag = ''
+
+const resolvedTag = computed(() => resolveVfxTag(props.tag, props.ult))
+const spriteStyle = computed(() => {
+  const pos = getSpriteSpec(resolvedTag.value)?.objectPosition
+  return pos && pos !== 'center center' ? { objectPosition: pos } : undefined
+})
 
 onMounted(async () => {
   running = true

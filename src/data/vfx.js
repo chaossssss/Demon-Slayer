@@ -8,15 +8,16 @@ export const VFX_DURATION = {
   fire: 450,
   heal: 500,
   shield: 450,
-  smoke: 480,
+  smoke: 520,
   mana: 500,
 }
 
-const SPRITE = (dir, frameMs = 50) => ({
+const SPRITE = (dir, frameMs = 50, objectPosition = 'center center') => ({
   dir,
   frames: 8,
   frameMs,
   blend: 'screen',
+  objectPosition,
 })
 
 /** tag → 帧目录（public 下），帧数与每帧毫秒 */
@@ -26,20 +27,20 @@ export const VFX_SPRITE = {
   whirl: SPRITE('/vfx/whirl', 52),
   heavy: SPRITE('/vfx/heavy', 52),
   impact: SPRITE('/vfx/impact', 55),
-  fire: SPRITE('/vfx/fire', 55),
+  fire: SPRITE('/vfx/fire', 55, 'center 72%'),
   heal: SPRITE('/vfx/heal', 60),
   shield: SPRITE('/vfx/shield', 55),
-  smoke: SPRITE('/vfx/smoke', 58),
+  smoke: SPRITE('/vfx/smoke', 62),
   mana: SPRITE('/vfx/mana', 58),
   'slash-ult': SPRITE('/vfx/slash-ult', 52),
   'pierce-ult': SPRITE('/vfx/pierce-ult', 50),
   'whirl-ult': SPRITE('/vfx/whirl-ult', 54),
   'heavy-ult': SPRITE('/vfx/heavy-ult', 54),
   'impact-ult': SPRITE('/vfx/impact-ult', 56),
-  'fire-ult': SPRITE('/vfx/fire-ult', 56),
+  'fire-ult': SPRITE('/vfx/fire-ult', 56, 'center 70%'),
   'heal-ult': SPRITE('/vfx/heal-ult', 62),
   'shield-ult': SPRITE('/vfx/shield-ult', 56),
-  'smoke-ult': SPRITE('/vfx/smoke-ult', 60),
+  'smoke-ult': SPRITE('/vfx/smoke-ult', 64),
   'mana-ult': SPRITE('/vfx/mana-ult', 60),
 }
 

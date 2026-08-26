@@ -65,8 +65,8 @@ def enhance_frame(im: Image.Image, mode: str) -> Image.Image:
         im = tint(im, (180, 220, 255), 0.2)
         im = ImageEnhance.Brightness(im).enhance(1.14)
     elif mode == "smoke":
-        im = tint(im, (200, 210, 230), 0.12)
-        im = ImageEnhance.Brightness(im).enhance(1.1)
+        im = tint(im, (160, 120, 200), 0.18)
+        im = ImageEnhance.Brightness(im).enhance(1.14)
     elif mode == "gold":
         im = tint(im, (255, 200, 80), 0.25)
         im = ImageEnhance.Brightness(im).enhance(1.16)
@@ -76,28 +76,33 @@ def enhance_frame(im: Image.Image, mode: str) -> Image.Image:
     return im
 
 
-for base, ult, mode in ULTS:
-    src_dir = ROOT / base
-    dest = ROOT / ult
-    if not src_dir.exists():
-        print(f"skip missing base {base}")
-        continue
-    dest.mkdir(parents=True, exist_ok=True)
-    frames = []
-    for i in range(1, 9):
-        src = src_dir / f"{i:02d}.png"
-        if not src.exists():
-            raise SystemExit(f"missing {src}")
-        fr = enhance_frame(Image.open(src), mode)
-        out = dest / f"{i:02d}.png"
-        fr.save(out, "PNG")
-        frames.append(fr)
-        print(f"wrote {out}")
+def run_all():
+    for base, ult, mode in ULTS:
+        src_dir = ROOT / base
+        dest = ROOT / ult
+        if not src_dir.exists():
+            print(f"skip missing base {base}")
+            continue
+        dest.mkdir(parents=True, exist_ok=True)
+        frames = []
+        for i in range(1, 9):
+            src = src_dir / f"{i:02d}.png"
+            if not src.exists():
+                raise SystemExit(f"missing {src}")
+            fr = enhance_frame(Image.open(src), mode)
+            out = dest / f"{i:02d}.png"
+            fr.save(out, "PNG")
+            frames.append(fr)
+            print(f"wrote {out}")
 
-    strip = Image.new("RGBA", (512 * 8, 512), (0, 0, 0, 0))
-    for i, fr in enumerate(frames):
-        strip.paste(fr, (i * 512, 0), fr)
-    strip.save(dest / "preview-strip.png")
-    print(f"preview {ult}")
+        strip = Image.new("RGBA", (512 * 8, 512), (0, 0, 0, 0))
+        for i, fr in enumerate(frames):
+            strip.paste(fr, (i * 512, 0), fr)
+        strip.save(dest / "preview-strip.png")
+        print(f"preview {ult}")
 
-print("done")
+    print("done")
+
+
+if __name__ == "__main__":
+    run_all()
