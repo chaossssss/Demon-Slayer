@@ -12,13 +12,18 @@ export const VFX_DURATION = {
   mana: 500,
 }
 
-const SPRITE = (dir, frameMs = 50, objectPosition = 'center center') => ({
-  dir,
-  frames: 8,
-  frameMs,
-  blend: 'screen',
-  objectPosition,
-})
+const SPRITE = (dir, frameMs = 50, extra = 'center center') => {
+  const opts = typeof extra === 'string' ? { objectPosition: extra } : extra || {}
+  return {
+    dir,
+    frames: 8,
+    frameMs,
+    blend: opts.blend || 'screen',
+    objectPosition: opts.objectPosition || 'center center',
+    /** 帧内含人物：普通混合，出招时隐藏站桩立绘 */
+    actorClip: !!opts.actorClip,
+  }
+}
 
 /** tag → 帧目录（public 下），帧数与每帧毫秒 */
 export const VFX_SPRITE = {
@@ -82,6 +87,36 @@ export const CARD_VFX = {
 
 export function getCardVfx(cardId) {
   return CARD_VFX[cardId] || { hero: [], targets: [] }
+}
+
+/** 卡牌 → 人物动作（与特效标签联动） */
+const TAG_ACTOR_ANIM = {
+  slash: 'slash',
+  pierce: 'thrust',
+  whirl: 'slam',
+  heavy: 'slam',
+  impact: 'slam',
+  fire: 'cast',
+  heal: 'cast',
+  mana: 'cast',
+  smoke: 'cast',
+  shield: 'guard',
+}
+
+export function getCardActorAnim(cardId) {
+  const tags = getCardVfx(cardId).hero
+  // 人物已画进特效帧时，不再叠 CSS 动作
+  if (tags.some((tag) => getSpriteSpec(tag)?.actorClip)) return null
+  for (const tag of tags) {
+    if (TAG_ACTOR_ANIM[tag]) return TAG_ACTOR_ANIM[tag]
+  }
+  const tplHero = getCardVfx(cardId)
+  if (tplHero.targets?.length) return 'slash'
+  return 'cast'
+}
+
+export function cardUsesActorClip(cardId) {
+  return getCardVfx(cardId).hero.some((tag) => getSpriteSpec(tag)?.actorClip)
 }
 
 export function vfxPlayDuration(cardId, star = 1) {

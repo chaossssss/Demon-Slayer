@@ -164,8 +164,18 @@
       <div class="rune" aria-hidden="true" />
 
       <div class="hero-slot" :class="{ busy: fxLocked }">
-        <PixelActor :kind="heroKind" :anim="heroAnim" :size="heroSize" />
-        <VfxHost :items="heroFx" facing="right" @ended="onHeroFxEnded" />
+        <PixelActor
+          :kind="heroKind"
+          :anim="heroAnim"
+          :poseKey="heroPoseKey"
+          :size="heroSize"
+        />
+        <VfxHost
+          :items="heroFx"
+          facing="right"
+          class="hero-vfx"
+          @ended="onHeroFxEnded"
+        />
       </div>
 
       <div class="enemy-sprites">
@@ -185,6 +195,7 @@
           <PixelActor
             :kind="e.kind || e.id"
             :anim="enemyAnimOf(e)"
+            :pose-key="enemyPoseKeyOf(e.uid)"
             :size="enemySize(e)"
           />
           <VfxHost
@@ -332,7 +343,7 @@ import PixelActor from '@/components/PixelActor.vue'
 import VfxHost from '@/components/VfxHost.vue'
 import { CARD_POOL, FLOORS_TO_WIN, getCardDesc, getCardTargetCount } from '@/data/gameData'
 import { classActorKind } from '@/data/actorSprites'
-import { getCardVfx, vfxImpactDelay, vfxPlayDuration } from '@/data/vfx'
+import { getCardVfx, getCardActorAnim, vfxImpactDelay, vfxPlayDuration } from '@/data/vfx'
 
 const game = useGameStore()
 const ready = computed(() => !!game.classId)
@@ -342,8 +353,10 @@ const shopOpen = ref(false)
 const fxLocked = ref(false)
 const heroAnim = ref('idle')
 const heroFx = ref([])
+const heroPoseKey = ref(0)
 const enemyAnim = reactive({})
 const enemyFx = reactive({})
+const enemyPoseKey = reactive({})
 let fxSeq = 1
 
 const heroSize = 168
@@ -436,9 +449,25 @@ function enemyFxOf(uid) {
   return enemyFx[uid] || []
 }
 
+function enemyPoseKeyOf(uid) {
+  return enemyPoseKey[uid] || 0
+}
+
 function ensureEnemyFx(uid) {
   if (!enemyFx[uid]) enemyFx[uid] = []
   if (!enemyAnim[uid]) enemyAnim[uid] = 'idle'
+  if (!enemyPoseKey[uid]) enemyPoseKey[uid] = 0
+}
+
+function setHeroAnim(anim) {
+  heroAnim.value = anim
+  heroPoseKey.value += 1
+}
+
+function setEnemyAnim(uid, anim) {
+  ensureEnemyFx(uid)
+  enemyAnim[uid] = anim
+  enemyPoseKey[uid] = (enemyPoseKey[uid] || 0) + 1
 }
 
 function spawnHeroFx(tag, ult) {
@@ -464,32 +493,33 @@ function wait(ms) {
 }
 
 async function playCombatFx(card, targetIds) {
-  const tpl = CARD_POOL[card.cardId]
-  const isAttack = tpl.type === 'attack' || tpl.base?.damage || tpl.base?.burn
-  heroAnim.value = isAttack ? 'attack' : tpl.base?.block ? 'guard' : 'cast'
-
+  const pose = getCardActorAnim(card.cardId)
   const ult = Number(card.star) >= 3
   const spec = getCardVfx(card.cardId)
+  const delay = vfxImpactDelay(card.cardId)
+  const total = vfxPlayDuration(card.cardId, card.star)
+
+  if (pose) {
+    setHeroAnim(pose)
+    await wait(pose === 'cast' || pose === 'guard' ? 80 : 60)
+  }
+
   for (const tag of spec.hero) spawnHeroFx(tag, ult)
 
-  const delay = vfxImpactDelay(card.cardId)
   if (delay) await wait(delay)
-
   for (const uid of targetIds) {
     const e = game.enemies.find((x) => x.uid === uid)
     if (!e) continue
-    ensureEnemyFx(uid)
     for (const tag of spec.targets) spawnEnemyFx(uid, tag, ult)
-    enemyAnim[uid] = e.hp > 0 ? 'hurt' : 'die'
+    setEnemyAnim(uid, e.hp > 0 ? 'hurt' : 'die')
   }
 
-  const remain = Math.max(180, vfxPlayDuration(card.cardId, card.star) - delay)
+  const remain = Math.max(220, total - delay)
   await wait(remain)
-
-  heroAnim.value = game.hp <= 0 ? 'die' : 'idle'
+  setHeroAnim(game.hp <= 0 ? 'die' : 'idle')
   for (const uid of targetIds) {
     const e = game.enemies.find((x) => x.uid === uid)
-    enemyAnim[uid] = !e || e.hp <= 0 ? 'die' : 'idle'
+    setEnemyAnim(uid, !e || e.hp <= 0 ? 'die' : 'idle')
   }
 }
 
@@ -554,16 +584,15 @@ async function endTurn() {
   try {
     const attackers = [...game.livingEnemies]
     for (const e of attackers) {
-      ensureEnemyFx(e.uid)
-      enemyAnim[e.uid] = 'attack'
+      setEnemyAnim(e.uid, 'slash')
       await wait(160)
     }
     game.endTurn()
-    heroAnim.value = game.hp <= 0 ? 'die' : 'hurt'
+    setHeroAnim(game.hp <= 0 ? 'die' : 'hurt')
     await wait(280)
-    heroAnim.value = game.hp <= 0 ? 'die' : 'idle'
+    setHeroAnim(game.hp <= 0 ? 'die' : 'idle')
     for (const e of attackers) {
-      enemyAnim[e.uid] = 'idle'
+      setEnemyAnim(e.uid, 'idle')
     }
     // 回合结束：战斗中刷新市集后弹出；清场进休整时也弹出
     if (game.phase === 'combat' || game.phase === 'shop') {

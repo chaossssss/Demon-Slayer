@@ -3,7 +3,7 @@
     <img
       v-if="spriteUrl"
       class="fx-sprite"
-      :class="{ flip: facing === 'left' }"
+      :class="{ flip: facing === 'left', actor: isActorClip }"
       :src="spriteUrl"
       :style="spriteStyle"
       alt=""
@@ -37,9 +37,22 @@ let spriteSpec = null
 let playTag = ''
 
 const resolvedTag = computed(() => resolveVfxTag(props.tag, props.ult))
+const isActorClip = computed(() => !!getSpriteSpec(resolvedTag.value)?.actorClip)
 const spriteStyle = computed(() => {
-  const pos = getSpriteSpec(resolvedTag.value)?.objectPosition
-  return pos && pos !== 'center center' ? { objectPosition: pos } : undefined
+  const spec = getSpriteSpec(resolvedTag.value)
+  if (!spec) return undefined
+  const style = {}
+  if (spec.objectPosition && spec.objectPosition !== 'center center') {
+    style.objectPosition = spec.objectPosition
+  }
+  if (spec.blend && spec.blend !== 'screen') {
+    style.mixBlendMode = spec.blend
+  }
+  if (spec.actorClip) {
+    style.mixBlendMode = 'normal'
+    style.filter = 'none'
+  }
+  return Object.keys(style).length ? style : undefined
 })
 
 onMounted(async () => {
@@ -134,6 +147,17 @@ function loop() {
   filter: drop-shadow(0 0 6px rgba(140, 200, 255, 0.35));
 }
 
+.fx-sprite.actor {
+  mix-blend-mode: normal;
+  filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.45));
+  object-fit: contain;
+  object-position: center bottom;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 .fx-sprite.flip {
   transform: scaleX(-1);
 }
@@ -143,7 +167,17 @@ function loop() {
   filter: drop-shadow(0 0 10px rgba(201, 162, 39, 0.55));
 }
 
+/* 含人物的帧不放大，否则会比站桩立绘大一圈 */
+.ult .fx-sprite.actor {
+  transform: none;
+  filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.45));
+}
+
 .ult .fx-sprite.flip {
   transform: scaleX(-1) scale(1.22);
+}
+
+.ult .fx-sprite.actor.flip {
+  transform: scaleX(-1);
 }
 </style>
