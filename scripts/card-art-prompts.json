@@ -1,0 +1,120 @@
+{
+  "prefix": "国风暗黑志怪纸本风格，炭黑底(#1c1712~#2a2118)，宣纸绢本纹理质感覆盖全图，朱红血色(#9b2d1f)朱砂点缀，鎏金(#c9a227)勾金描边装饰，宋代工笔重彩结合水墨写意意境，厚重神秘的斩鬼捉妖氛围，高对比光影，细腻铁线描笔触，山海经/搜神记/聊斋志异志怪插画风格，游戏UI插画，超清，8K。竖版3:4，仅卡牌中央插画主体，不要卡框不要费用数字不要星级不要卡名不要任何文字不要水印。",
+  "negative": "低质量，模糊，丑陋，畸形，多余肢体，多余手指，水印，文字，签名，现代服装，3D渲染，照片质感，Q版过度，色彩饱和度溢出，日式建筑，鸟居，和服，武士，忍者，樱花，枯山水，男性主角，卡牌外框，UI界面",
+  "identity": {
+    "swordsman": "必须是参考图中的同一位长安侠女剑仙：红绫束发高髻插赤金簪，凤目英气带媚，烬橙色银纹贴身交领劲装（短襦、高开衩），朱红鞶囊，红缎护腕朱缨，手持鎏金龙渊汉剑。不要改成男性。",
+    "mage": "必须是参考图中的同一位南境灵巫神女：披发戴玉胜，额间朱砂花钿，苍蓝半透明轻纱留仙裙，深V交领，赤足脚踝鎏金铃铛，手持玉版符册。不要改成男性。",
+    "assassin": "必须是参考图中的同一位月下影杀罗刹女：乌发高束插银簪半遮面露出冷艳桃花眼，暗紫贴身夜行劲装，鸳鸯柳叶短刃。不要改成男性。",
+    "guardian": "必须是参考图中的同一位镇国夫人巾帼女将：凤翅盔缀璎珞，高马尾紫金冠，苍绿半甲明光铠，鎏金镶边巨型玄武盾。不要改成男性。"
+  },
+  "cards": [
+    {
+      "id": "slash",
+      "class": "swordsman",
+      "ref": "src/assets/classes/swordsman.png",
+      "prompt": "动作：横剑出鞘斩击，剑刃拉出一道橙红(#c45c26)剑气弧光，破晓金光，华山剪影在后。半身到膝即可。"
+    },
+    {
+      "id": "heavy_slash",
+      "class": "swordsman",
+      "ref": "src/assets/classes/swordsman.png",
+      "prompt": "动作：双手举汉剑自上劈下裂空，天空出现一道烬橙血色裂痕，沉重剑气砸地。半身动态。"
+    },
+    {
+      "id": "focus_strike",
+      "class": "swordsman",
+      "ref": "src/assets/classes/swordsman.png",
+      "prompt": "动作：闭目凝神一心斩，剑尖聚破晓金光，周围气流静止，无想剑意。半身特写。"
+    },
+    {
+      "id": "whirlwind",
+      "class": "swordsman",
+      "ref": "src/assets/classes/swordsman.png",
+      "prompt": "动作：回旋挥刀，多道橙红剑气环成刀风，千刃旋转。半身动态。"
+    },
+    {
+      "id": "ember",
+      "class": "mage",
+      "ref": "src/assets/classes/mage.png",
+      "prompt": "动作：指尖点燃朱砂符咒，两股苍蓝(#3d6b8c)咒火与朱红业火分向两侧，符箓飘浮。半身。"
+    },
+    {
+      "id": "inferno",
+      "class": "mage",
+      "ref": "src/assets/classes/mage.png",
+      "prompt": "动作：双手张开召业火焚天，三重朱砂火柱冲天，身后朱雀法相虚影。半身。"
+    },
+    {
+      "id": "ward",
+      "class": "mage",
+      "ref": "src/assets/classes/mage.png",
+      "prompt": "动作：展开符箓结界圆阵，苍蓝护盾光罩，阵边舔着细小朱砂火苗。半身。"
+    },
+    {
+      "id": "mana_surge",
+      "class": "mage",
+      "ref": "src/assets/classes/mage.png",
+      "prompt": "动作：咒力自地面涌入经脉，苍蓝灵流环绕周身，符册发光。半身。"
+    },
+    {
+      "id": "stab",
+      "class": "assassin",
+      "ref": "src/assets/classes/assassin.png",
+      "prompt": "动作：柳叶短刃向前突刺，暗紫(#5a3d6b)残影拉长，穿心一击。半身。"
+    },
+    {
+      "id": "execute",
+      "class": "assassin",
+      "ref": "src/assets/classes/assassin.png",
+      "prompt": "动作：短刃自上裁落如处决，血色月牙刀光，绝命瞬间。半身。"
+    },
+    {
+      "id": "smoke",
+      "class": "assassin",
+      "ref": "src/assets/classes/assassin.png",
+      "prompt": "动作：身形化入紫烟爆散，影遁残影，满月飞檐剪影。半身。"
+    },
+    {
+      "id": "backstab",
+      "class": "assassin",
+      "ref": "src/assets/classes/assassin.png",
+      "prompt": "动作：侧后转身双刃突刺，月下背杀，紫烟燕尾飞镖。半身。"
+    },
+    {
+      "id": "bash",
+      "class": "guardian",
+      "ref": "src/assets/classes/guardian.png",
+      "prompt": "动作：玄武盾或重器砸地震地，苍绿(#4a6b3d)土石迸裂。半身。"
+    },
+    {
+      "id": "iron_wall",
+      "class": "guardian",
+      "ref": "src/assets/classes/guardian.png",
+      "prompt": "动作：巨型玄武盾竖起如城垣，甲片叠纹，雁门关虚影。半身。"
+    },
+    {
+      "id": "riposte",
+      "class": "guardian",
+      "ref": "src/assets/classes/guardian.png",
+      "prompt": "动作：盾面反弹冲击后立刻反击，荆棘反伤金光。半身。"
+    },
+    {
+      "id": "fortify",
+      "class": "guardian",
+      "ref": "src/assets/classes/guardian.png",
+      "prompt": "动作：天盾光层自天而降覆身，多层护甲与长城城廓虚影。半身。"
+    },
+    {
+      "id": "guard",
+      "class": null,
+      "ref": null,
+      "prompt": "不要人物全身。画面是双臂交叉格挡时展开的半透明青铜青绿护盾灵光，虎头盾形隐现，宣纸炭黑底。技能牌青绿(#3d6b4f)色偏。"
+    },
+    {
+      "id": "heal_potion",
+      "class": null,
+      "ref": null,
+      "prompt": "不要人物全身。古风白瓷药瓶倾出疗伤散，苍绿药草蒸汽与粉末飘散，温和治愈光晕。技能牌青绿(#3d6b4f)色偏。"
+    }
+  ]
+}

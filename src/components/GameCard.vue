@@ -13,6 +13,9 @@
       <span class="cost">{{ card.cost }}</span>
       <span class="stars">{{ '★'.repeat(card.star || 1) }}</span>
     </div>
+    <div v-if="artUrl" class="card-art">
+      <img :src="artUrl" :alt="card.name" draggable="false" loading="lazy" />
+    </div>
     <div v-if="isUltimate" class="ult-badge">大招</div>
     <h3 class="name">{{ card.name }}</h3>
     <p v-if="isUltimate && ultimateName" class="ult-name">{{ ultimateName }}</p>
@@ -27,6 +30,7 @@
 <script setup>
 import { computed } from 'vue'
 import { CARD_POOL, getCardDesc, MAX_STAR, scaleStats } from '@/data/gameData'
+import { getCardArtUrl } from '@/data/cardArt'
 
 const props = defineProps({
   card: { type: Object, required: true },
@@ -43,6 +47,7 @@ const star = computed(() => {
   return Math.min(Math.max(1, Number(props.card.star) || 1), MAX_STAR)
 })
 const tpl = computed(() => CARD_POOL[props.card.cardId])
+const artUrl = computed(() => getCardArtUrl(props.card.cardId))
 const isUltimate = computed(() => {
   if (props.card.fromShop || props.price != null) return false
   return star.value >= MAX_STAR && !!tpl.value?.ultimate
@@ -68,8 +73,8 @@ const typeLabel = computed(() => {
   --glow: rgba(201, 162, 39, 0.38);
   position: relative;
   width: 148px;
-  min-height: 210px;
-  padding: 12px;
+  min-height: 230px;
+  padding: 10px 10px 12px;
   display: flex;
   flex-direction: column;
   text-align: left;
@@ -145,7 +150,7 @@ const typeLabel = computed(() => {
 .card.ultimate {
   --glow: rgba(201, 162, 39, 0.58);
   width: 158px;
-  min-height: 230px;
+  min-height: 248px;
   border-color: #c9a227;
   background: linear-gradient(165deg, #5a3a14 0%, #2a1810 55%, #1a1210 100%);
   box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.45), 0 14px 28px rgba(0, 0, 0, 0.45);
@@ -163,9 +168,38 @@ const typeLabel = computed(() => {
 }
 
 .card-top {
+  position: relative;
+  z-index: 2;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.card-art {
+  position: relative;
+  z-index: 0;
+  margin: 6px -4px 4px;
+  height: 88px;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(201, 162, 39, 0.22);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.45);
+}
+
+.card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+  user-select: none;
+}
+
+.card.ultimate .card-art {
+  border-color: rgba(201, 162, 39, 0.55);
+  box-shadow:
+    inset 0 0 20px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(201, 162, 39, 0.18);
 }
 
 .cost {
@@ -188,7 +222,9 @@ const typeLabel = computed(() => {
 }
 
 .name {
-  margin: 14px 0 4px;
+  position: relative;
+  z-index: 2;
+  margin: 8px 0 3px;
   font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 700;
