@@ -2,6 +2,8 @@
  * 16×16 侧视像素立绘。`.` 透明，其余为调色板键。
  * 玩家朝右，敌人朝左（组件内 scaleX(-1)）。
  */
+import { publicAsset } from '@/utils/publicAsset'
+
 export const ACTOR_PALETTE = {
   '.': null,
   x: '#1a120c',
@@ -259,5 +261,6 @@ export const ACTOR_ART = {
 
 export function getActorArt(kind) {
   const key = resolveActorKind(kind, 'swordsman')
-  return ACTOR_ART[key] || null
+  const url = ACTOR_ART[key]
+  return url ? publicAsset(url) : null
 }

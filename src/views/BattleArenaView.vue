@@ -1,6 +1,10 @@
 <template>
   <main class="arena-page">
-    <div class="arena-bg" aria-hidden="true" />
+    <div
+      class="arena-bg"
+      :style="{ backgroundImage: `url(${battleBgUrl})` }"
+      aria-hidden="true"
+    />
     <div class="petals" aria-hidden="true" />
 
     <header class="hud-top">
@@ -183,9 +187,11 @@ import { CARD_POOL, CLASSES, getCardDesc, getCardTargetCount } from '@/data/game
 import { classActorKind } from '@/data/actorSprites'
 import { TREASURE_POOL } from '@/data/treasures'
 import { getCardVfx, vfxImpactDelay, vfxPlayDuration } from '@/data/vfx'
+import { publicAsset } from '@/utils/publicAsset'
 
 const treasures = [TREASURE_POOL.copper_coin, TREASURE_POOL.wooden_amulet, TREASURE_POOL.herb_pouch]
 
+const battleBgUrl = publicAsset('/assets/ui/bg-battle.jpg')
 const floor = 3
 const maxHp = 70
 const maxEnergy = 12
@@ -602,7 +608,6 @@ function rerollShop() {
   inset: 0;
   z-index: 0;
   background-color: #14100c;
-  background-image: url('/assets/ui/bg-battle.jpg');
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;

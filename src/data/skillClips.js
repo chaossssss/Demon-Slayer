@@ -1,3 +1,5 @@
+import { publicAsset } from '@/utils/publicAsset'
+
 function clipBase(classId, cardId, star = 1) {
   const ult = Number(star) >= 3 ? '-ult' : ''
   return `/skills/${classId || 'swordsman'}/${cardId}${ult}`
@@ -8,9 +10,15 @@ export function skillClipCandidates(classId, cardId, star = 1) {
   if (!cardId) return []
   const list = []
   if (Number(star) >= 3) {
-    list.push(`${clipBase(classId, cardId, 3)}.mp4`, `${clipBase(classId, cardId, 3)}.webm`)
+    list.push(
+      publicAsset(`${clipBase(classId, cardId, 3)}.mp4`),
+      publicAsset(`${clipBase(classId, cardId, 3)}.webm`),
+    )
   }
-  list.push(`${clipBase(classId, cardId, 1)}.mp4`, `${clipBase(classId, cardId, 1)}.webm`)
+  list.push(
+    publicAsset(`${clipBase(classId, cardId, 1)}.mp4`),
+    publicAsset(`${clipBase(classId, cardId, 1)}.webm`),
+  )
   return [...new Set(list)]
 }
 

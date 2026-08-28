@@ -1,5 +1,7 @@
 /** 卡牌中央插画路径（一星底图；二/三星沿用同图 + CSS 边框区分） */
 
+import { publicAsset } from '@/utils/publicAsset'
+
 const CARD_ART_PREFIX = '/assets/cards'
 
 /** @type {Record<string, string>} */
@@ -25,5 +27,6 @@ export const CARD_ART = {
 }
 
 export function getCardArtUrl(cardId) {
-  return CARD_ART[cardId] || null
+  const url = CARD_ART[cardId]
+  return url ? publicAsset(url) : null
 }

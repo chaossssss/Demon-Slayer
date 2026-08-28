@@ -361,6 +361,7 @@ import VfxHost from '@/components/VfxHost.vue'
 import { CARD_POOL, FLOORS_TO_WIN, getCardDesc, getCardTargetCount } from '@/data/gameData'
 import { classActorKind, getActorArt, resolveActorKind } from '@/data/actorSprites'
 import { getCardVfx, getCardActorAnim, vfxImpactDelay, vfxPlayDuration } from '@/data/vfx'
+import { publicAsset } from '@/utils/publicAsset'
 
 const game = useGameStore()
 const ready = computed(() => !!game.classId)
@@ -395,9 +396,9 @@ const battleBgKind = computed(() => {
   return 'normal'
 })
 const battleBgUrl = computed(() => {
-  if (battleBgKind.value === 'boss') return '/assets/ui/battle-bg-boss.jpg'
-  if (battleBgKind.value === 'elite') return '/assets/ui/battle-bg-elite.jpg'
-  return '/assets/ui/bg-battle.jpg'
+  if (battleBgKind.value === 'boss') return publicAsset('/assets/ui/battle-bg-boss.jpg')
+  if (battleBgKind.value === 'elite') return publicAsset('/assets/ui/battle-bg-elite.jpg')
+  return publicAsset('/assets/ui/bg-battle.jpg')
 })
 const rerollCost = computed(() => 3 + game.floor)
 const totalFloors = FLOORS_TO_WIN
@@ -675,7 +676,6 @@ watch(
   inset: 0;
   z-index: 0;
   background-color: #14100c;
-  background-image: url('/assets/ui/bg-battle.jpg');
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;

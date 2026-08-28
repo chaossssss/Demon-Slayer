@@ -1,10 +1,10 @@
 <template>
   <main class="home">
-    <img class="home-bg" src="/assets/ui/home-bg.jpg" alt="" draggable="false" />
+    <img class="home-bg" :src="homeBgUrl" alt="" draggable="false" />
 
     <div class="home-ui fade-up">
       <RouterLink class="btn-start" to="/class" aria-label="新的游戏">
-        <img src="/assets/ui/btn-start.png" alt="新的游戏" draggable="false" />
+        <img :src="btnStartUrl" alt="新的游戏" draggable="false" />
       </RouterLink>
     </div>
   </main>
@@ -12,6 +12,10 @@
 
 <script setup>
 import { RouterLink } from 'vue-router'
+import { publicAsset } from '@/utils/publicAsset'
+
+const homeBgUrl = publicAsset('/assets/ui/home-bg.jpg')
+const btnStartUrl = publicAsset('/assets/ui/btn-start.png')
 </script>
 
 <style scoped>
